@@ -16,11 +16,16 @@ GetOptions(
 	'o:s'	=> \$outputname,
 );
 unless ($filename and $outputname) {
-	die "usage perl cleanfile.pl <-i file name> <-o output file, use - for standard out>  <-t OPTIONAL input type, available is fasta, default none>\n";
+	die "usage perl cleanfile.pl <-i file name> <-o output file, use - for standard out>  <-t OPTIONAL input type, available is \"fasta\", \"keepreturn\", default none>\n";
 }
 open (INPUT, $filename) or die "cannot open input file $filename\n";
 if ($outputname) {
 	open (OUTPUT,">$outputname") or die "cannot open output file $outputname\n";
+}
+if ($seqtype) {
+	unless (($seqtype eq "fasta") or ($seqtype eq "keepreturn")) {
+		die "sequence type $seqtype is unknown";
+	}
 }
 
 
@@ -40,6 +45,9 @@ while (my $line=<INPUT>) {
 	else {
 		$line =~ s/\s//g; #remove white spaces from the current line
 		print OUTPUT $line;
+		if (($seqtype eq "keepreturn") and ((length $line) > 0)) {
+			print OUTPUT "\n";
+		}
 	}
 	$firstline = 0;
 }
