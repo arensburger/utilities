@@ -10,23 +10,29 @@ use File::Basename;
 use Getopt::Long;
 
 ##### read and check the inputs
-my $filename; 
+my $filename; #name of input file
 my $seqtype = "fq"; #file type, default is fastq
+my $outputname; #base name of the output
 GetOptions(
 	'i:s'   => \$filename,
 	't:s'	=> \$seqtype,
+	'o:s'	=> \$outputname
 );
 #check inputs
-die ("usage: perl split_pair.pl -i <REQUIRED: input file file> -t <OPTIONAL: sequence type fq or fa (default fq)>\n") unless ($filename);
+die ("usage: perl split_pair.pl -i <REQUIRED: input file file> -t <OPTIONAL: sequence type fq or fa (default fq)> -o <OPTIONAL: output name it will be followed by -pair1 or -pair2\n") unless ($filename);
 unless (($seqtype eq "fq") or ($seqtype eq "fa")) {
 	die "Sequence type (-t) can only be fq or fa\n";
 }
 
 #set up names
 my (@suffixes) = (".fastq", ".fq", ".fasta", ".fa", ".fas"); #possible suffixes that will be removed otherwise suffix will be kept
-my $basename = basename($filename, @suffixes);
-my $file1name = $basename . "-pair1.fq";
-my $file2name = $basename . "-pair2.fq";
+unless ($outputname) {
+	$outputname = basename($filename, @suffixes);
+}
+my $file1name = $outputname . "-pair1";
+my $file2name = $outputname . "-pair2";
+
+#initalize line counter
 my $linecounter = 1;
 
 #read the file
