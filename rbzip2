@@ -1,0 +1,4 @@
+#! /bin/sh
+# Jan 2012, this is mostly from Andrew Arensburger.  This script takes a directory name as input and compresses individually every file unless it's already been compressed with bz2 or gz
+directoryname=$1
+find $directoryname -type f -not \( -name '*.bz2' -o -name '*.gz' \) -print0 | xargs -0 bzip2 -f

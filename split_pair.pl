@@ -1,4 +1,3 @@
-
 #!/usr/bin/perl
 
 # May 9, 2012 takes a fastq file with paired reads, checks that names all match and produces two files with the paired reads
@@ -8,18 +7,30 @@
 
 use strict;
 use File::Basename;
+use Getopt::Long;
 
-#check input
-die ("usage: perl split_pair.pl <FASTQ file>\n") unless ($ARGV[0]);
+##### read and check the inputs
+my $filename; 
+my $seqtype = "fq"; #file type, default is fastq
+GetOptions(
+	'i:s'   => \$filename,
+	't:s'	=> \$seqtype,
+);
+#check inputs
+die ("usage: perl split_pair.pl -i <REQUIRED: input file file> -t <OPTIONAL: sequence type fq or fa (default fq)>\n") unless ($filename);
+unless (($seqtype eq "fq") or ($seqtype eq "fa")) {
+	die "Sequence type (-t) can only be fq or fa\n";
+}
 
-my (@suffixes) = (".fastq", ".fq"); #possible suffixes that will be removed otherwise suffix will be kept
 #set up names
-my $basename = basename($ARGV[0], @suffixes);
+my (@suffixes) = (".fastq", ".fq", ".fasta", ".fa", ".fas"); #possible suffixes that will be removed otherwise suffix will be kept
+my $basename = basename($filename, @suffixes);
 my $file1name = $basename . "-pair1.fq";
 my $file2name = $basename . "-pair2.fq";
 my $linecounter = 1;
+
 #read the file
-open (INPUT, $ARGV[0]) or die "cannot open input file $ARGV[0]\n";
+open (INPUT, $filename) or die "cannot open input file $filename\n";
 open (OUTPUT1, ">$file1name") or die "cannot open output file $file1name\n";
 open (OUTPUT2, ">$file2name") or die "cannot open output file $file2name\n";
 while (my $line = <INPUT>) {
@@ -27,25 +38,60 @@ while (my $line = <INPUT>) {
 	my $seq1; 
 	my $seq2;
 	chomp $line; #use this to remove empty lines
-	if (($line =~ /^@(\S+)\/1/) or ($line =~ /^@(\S+)\s1:/)) {
-		$seq1 = "$line\n" . <INPUT> . <INPUT> . <INPUT>;
-	}
-	elsif (($line =~ /^@(\S+)\/2/) or  ($line =~ /^@(\S+)\s2:/)) {
-		$seq2 = "$line\n" . <INPUT> . <INPUT> . <INPUT>;
-	}
-	else {
-		if (length $line == 0) {
-			warn "empty line found in the file at line $linecounter\n";
+
+	#run this part if it's a fastq formated file
+	if ($seqtype eq "fq") {
+		if (($line =~ /^@(\S+)\/1/) or ($line =~ /^@(\S+)\s1:/)) {
+			$seq1 = "$line\n" . <INPUT> . <INPUT> . <INPUT>;
+		}
+		elsif (($line =~ /^@(\S+)\/2/) or  ($line =~ /^@(\S+)\s2:/)) {
+			$seq2 = "$line\n" . <INPUT> . <INPUT> . <INPUT>;
+		}
+		elsif ($line =~ /^@(\S+)/) {
+			$seq1 = "$line\n" . <INPUT> . <INPUT> . <INPUT>;
+			$linecounter += 4;
+			$seq2 = <INPUT> . <INPUT> . <INPUT> . <INPUT>;
 		}
 		else {
-			die "unexpected line, make sure the format of the header is known to the script\n$line";
+			if (length $line == 0) {
+				warn "empty line found in the file at line $linecounter\n";
+			}
+			else {
+				die "unexpected line, make sure the format of the header is known to the script\n$line";
+			}
 		}
+
+		print OUTPUT1 "$seq1";
+		print OUTPUT2 "$seq2";
+	
+		$linecounter += 4;
 	}
+	elsif ($seqtype eq "fa") {
+		if (($line =~ /^>(\S+)\/1/) or ($line =~ /^>(\S+)\s1:/)) {
+                        $seq1 = "$line\n" . <INPUT>;
+                }
+		elsif (($line =~ /^>(\S+)\/2/) or  ($line =~ /^>(\S+)\s2:/)) {
+                        $seq2 = "$line\n" . <INPUT>;
+                }
+		 elsif ($line =~ /^>(\S+)/) {
+                        $seq1 = "$line\n" . <INPUT>;
+                        $linecounter += 4;
+                        $seq2 = <INPUT> . <INPUT>;
+                }
 
-	print OUTPUT1 "$seq1";
-	print OUTPUT2 "$seq2";
+		else {
+			 if (length $line == 0) {
+                                warn "empty line found in the file at line $linecounter\n";
+                        }
+                        else {
+                                die "unexpected line, make sure the format of the header is known to the script\n$line";
+                        }
+		}
+		print OUTPUT1 "$seq1";
+		print OUTPUT2 "$seq2";
 
-	$linecounter += 4;
+		$linecounter += 2;
+	}
 }
 close OUTPUT1;
 close OUTPUT2;
