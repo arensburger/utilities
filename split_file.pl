@@ -9,7 +9,7 @@ use Getopt::Long;
 
 my @seq; #holds all the fastq file data in one array
 my $filename; #input file
-my $seqtype = "fa"; #type of input file, "fa" = fasta, "fq" = fastq
+my $seqtype; #type of input file, "fa" = fasta, "fq" = fastq
 my $outputname; # the base name for the output, by default the same basename as the input
 my $numpartitions; # number of partitions to split this into
 
@@ -32,7 +32,9 @@ elsif (($suffix eq ".fq") or ($suffix eq ".fastq")) {
 	$seqtype = "fq";
 }
 else {
-	die "Cannot determine file type from the input name: $filename, $suffix";
+	unless ($seqtype) {	
+		die "Cannot determine file type from the input name: $filename, $suffix and -t option not set";
+	}
 }
 
 # determine the output name
