@@ -21,7 +21,7 @@ GetOptions(
 	'p:s'	=> \$numpartitions
 );
 unless ($filename and $numpartitions) {
-	die "usage: perl split_file.pl -i <input file name> -p <number of files to split this into> -t <OPTIONAL sequence type: fas, fastq, default fas>, -o <OPTIONAL base output name, default same base name as input>\n";
+	die "usage: perl split_file.pl -in <input file name> -p <number of files to split this into> -t <OPTIONAL sequence type: fas, fastq, default fas>, -o <OPTIONAL base output name, default same base name as input>\n";
 }
 # try to determine the input type
 (my $name, my $path, my $suffix) = fileparse($filename,qr"\..[^.]*$");
