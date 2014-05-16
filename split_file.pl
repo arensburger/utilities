@@ -15,7 +15,7 @@ my $numpartitions; # number of partitions to split this into
 
 ##### read and check the inputs
 GetOptions(
-	'i:s'   => \$filename,
+	'in:s'   => \$filename,
 	't:s'	=> \$seqtype,
 	'o:s'	=> \$outputname,
 	'p:s'	=> \$numpartitions
