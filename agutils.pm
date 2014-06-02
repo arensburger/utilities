@@ -6,48 +6,6 @@ sub rc {
     return ($sequence);
 }
 
-#runs the phylip program dnadist (must be known to the current directory), input is a string with phylip formated data. Returns a string starting
-# the array size and containing the output of the distance calculation
-sub dnadist {
-	($phylip_seq) = @_;
-	my $return_sring; #holds the whole table as a string
-	my $array_size  = 0; #number of rows and columns in the array
-	use Shell;
-	my $sc = Shell->new; #$sc stands for "shell script"
-	
-	#create input file
-	open (OUTPUT, ">infile") or die;
-	print OUTPUT "$phylip_seq";
-	close OUTPUT;
-
-	#remove any existing "outfile" as is messes up the run
-	$sc-> rm("outfile");
-
-	#create parameter file and run dnadist
-	open (OUTPUT, ">param") or die;
-	print OUTPUT "Y";
-	close OUTPUT;
-	$sc-> dnadist(" < param");
-	#parse the output file
-	open (INPUT, "outfile") or die;
-	my $line = <INPUT>; #skip the first line
-	while ($line = <INPUT>) {
-		unless ((length $line) == 1) { #avoid the last line of outfile that is blank
-			$line =~ s/\s+/\t/g;
-			$return_string .= $line;
-			$array_size++;
-		}
-	}
-	
-	#put the array size at the start of the return string
-	$return_string = $array_size . "\t" . $return_string;
-	#clean up
-	$sc-> rm("infile");
-	$sc-> rm("outfile");
-	$sc-> rm("param");
-
-	return ($return_string);
-}
 #converts a fasta file to a phylip format, takes in a hash and returns a string
 sub ftophy {
 	my (%seq) = @_;
@@ -74,32 +32,6 @@ sub ftophy {
 	return ($return_string);
 }
 
-#runs clustalw to align sequences, take in a hash and returns a hash
-sub align {
-	my (%input) = @_;
-
-	use Shell;
-	my $sc = Shell->new; #$sc stands for "shell script"
-
-	#create input fasta file
-	open (OUTPUT, ">input.fas") or die;
-	foreach my $key (keys %input) {
-		print OUTPUT ">$key\n$input{$key}\n";
-	}
-	close OUTPUT;
-
-	#run clustal (assumes the systems knows about clustalw2
-	$sc-> clustalw2("-INFILE=input.fas -OUTPUT=FASTA -OUTFILE=align.fasta");
-
-	#parse the output file 
-	my %aligned = genometohash ("align.fasta");
-
-	#clean up files
-#	$sc-> rm("input.fas");
-#	$sc-> rm("align.fasta");
-	
-	return (%aligned);
-}
 #find the TIRs of a sequence
 sub findtirs {
 	my ($seq) = @_;
@@ -158,12 +90,14 @@ sub genometohash {
 			#chomp $line;
 			my @data = split(" ", $line);
 			$title = $data[0];
+			$title = substr $title, 1;
 			$seq = "";
 		}
 		elsif ($line =~ />(\S+)/) { #will only be true for the first line
 			#chomp $line;
 			my @data = split(" ", $line);
 			$title = $data[0];
+		$title = substr $title, 1;
                         $seq = "";
 		}
 		else {
