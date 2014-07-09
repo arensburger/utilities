@@ -1,0 +1,37 @@
+August 2013
+Modified the way the script counts paired and unpaired reads.  The most important modification is that unpaired reads are now recognized those that don't have a properly matching mate.  The effect of this change is that reads pairs that map to two different transcripts are not counted anymore.  This mostly affect the Nadia output (-p n), but it could also affect the Crystal output (-p c).  This still needs to be tested.
+
+August 2013
+Added Jim ouptut option "-p j", simply the sum of PAIRED and UNPAIRED from Crystal's output
+December 2012
+History: Wrote this script for Nadia, modified to accomodate output for Crystal.
+Purpose: Take a .sam file as input and returns how many reads map to each input transcript.
+	There are two modes "-p n" = Nadia's mode, the output is described here:
+Hi Nadia,
+
+I'm attaching a script to hopefully do what you wanted.  Before I go into how to use it, here's what it does.  The script takes as input the output (in .sam format) of a bowtie alignment. It returns lines that look like this:  
+
+Locus_42659_Transcript_1/1_Confidence_1.000_Length_206	0	0	7	2
+
+Here's what the columns mean:
+column 1: name of the transcript
+column 2: number of PAIRED reads that match the transcript, counting each pair only once per transcript
+column 3: number of PAIRED reads that match the transcript more than once per transcript
+column 4: number of UNPAIRED reads that match the transcript, counting each pair only once per transcript
+column 5: number of UNPAIRED reads that match the transcript more than once per transcript 
+
+A few words about this:  
+1) The numbers in columns 2 and 3 are pairs, therefore a "1" means that two reads matched (one in each direction) on this transcript.  In this context if one member of a paired read is on one transcript and the other on a different transcript it is treated as an UNPAIRED read.
+2) the numbers in column 3 and 5 do not overlap with the number in columns 2 and 4.  The line above says that this transcript had a total of 9 reads mapping to it.  Five of those 9 reads mapped to only location in this transcript; and 4 of those nine reads mapped to multiple locations in the transcript.  Therefore, the count as you wanted it Nadia is 7 (5 unique reads + 2 multiple mapping reds).  If this is really confusing please let me know.
+
+Running the script:
+I tried it on hbar and the script works.  However, you need to install a program called "samtools", and "samtools" must be accessible in the directory you are in (i.e. if you type "samtools" on the command line you don't get an error).  You can download the program here: http://sourceforge.net/projects/samtools/files/samtools/0.1.18/ , you'll need to compile it using "make" (see the INSTALL file after you download it).  After that you simply need to type " perl counthits.pl -i <SAM file, output of bowtie2> ".  The output will go to the terminal, so you may want to send it into an output file (using > <name of ouptput file>).  Please let me know if you run into trouble.
+
+	The other mode is "-p c" = Crystal's output
+This simply returns the number of hits for PAIRED, then UNPAIRED.  Two hits for every paired.
+
+If neither mode is specified, returns Crystal's output first, then Nadias
+
+Testing: Used temp3.sam as test data
+
+
