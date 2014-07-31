@@ -75,7 +75,7 @@ sub genometohash {
 	use strict;
 	(my $filename) = @_;
 	my %genome; #hash with the genome
-	my $seq;
+	my $seq="";
 	my $title;
 	open (INPUT, $filename) or die "cannot open input file $filename in sub genometohash\n";
 	while (my $line = <INPUT>) {
@@ -293,14 +293,6 @@ sub scaff_seq
 	$filename = $dirname . "/" . $scaffold . '.fna';
 	($sequence, $i) = load_fna($filename);
 	return $substring = substr($sequence, $bound1, ($bound2 - $bound1));
-}
-
-#reverse complement
-sub rc {
-    my ($sequence) = @_;
-    $sequence = reverse $sequence;
-    $sequence =~ tr/ACGTRYMKSWacgtrymksw/TGCAYRKMWStgcayrkmws/;
-    return ($sequence);
 }
 
 #march 09, this script is defunct, now using "addzeros" instead
