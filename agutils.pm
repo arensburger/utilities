@@ -571,41 +571,68 @@ sub addzeros {
 		}
 	}
 }
-#find the TIRs of a sequence
-# sub findtirs {
-# 	my ($seq) = @_;
-# 
-# 	my $MISSMATCH = 3; #total allowable mismatches
-# 	my $endfound = 0; #boolean 0 until the end of the TIR is found
-# 	my $pos = 0; #current position in the sequence
-# 	my $lastgoodbase = 0; #position of the last match of bases
-# 	my $miss = 0; #number of non-matching sequences
-# 	while ($pos <= (0.5 * (length $seq)) && ($endfound == 0)) {
-# 	  my $leftbase = substr($seq, $pos, 1); #base on the left end
-# 	  my $rightbase = substr($seq, -$pos -1, 1);
-# 	  
-# 	  #update the current base
-# 	  if ($leftbase eq (rc $rightbase)) {
-# 	    $lastgoodbase = $pos;
-# 	  }
-# 	  else {
-# 	    $miss++;
-# 	  }
-# 
-# 	  #take stock if we need to stop
-# 	  if ($miss > $MISSMATCH) {
-# 	    $endfound = 1;
-# 	  }
-# 
-# 	  $pos++;
-# 	}
-# 	my $tir1 = substr($seq, 0, $lastgoodbase + 1);
-# 	my $tir2 = substr($seq, -$lastgoodbase - 1, $lastgoodbase + 1);
-# 
-# 	my @tirs;
-# 	$tirs[0] = $tir1;
-# 	$tirs[1] = $tir2;
-# 	
-# 	return(@tirs);
-#}
+
+# convert blast output to gff. Sebastien Guizard gave me this in July 2014.
+
+sub blastGFFConverter {
+	use strict;
+	use diagnostics;
+	use warnings;
+	use Getopt::Long;
+	use Term::ANSIColor;
+	use Data::Dumper;
+	
+	(my $blastfile) = @_;
+	
+	##> Define options
+	my %config;
+	
+	##> Setting Global Variables
+	$| = 1;
+	my $currentSubjectSeq = "";
+
+	open(BLAST, "<$blastfile") or die printError("Unable to open $blastfile\n", 1);
+	my $gff_output = File::Temp->new( UNLINK => 1, SUFFIX => '.gff' ); # temporary file with results blast 
+
+	while (1) {
+	    my @line = split(/\t/, <BLAST>);
+	    $line[12] =~ s/plus/\+/g;
+	    $line[12] =~ s/minus/\-/g;
+    
+	    if ($#line == 14) {
+	       # open(GFF, ">$config{out_gff_basename}.gff") or die printError("Unable to open $config{out_gff_basename}.gff\n", 1);   
+		open (GFF, ">$gff_output") or die "cannot open file $gff_output for gff file\n";
+	        $currentSubjectSeq = $line[1];
+	        ($line[8], $line[9]) = ($line[9], $line[8]) if ($line[8] > $line[9]);
+	        print GFF "$line[1]\tBLAST\tmatch\t$line[8]\t$line[9]\t0.0\t$line[12]\t.\tTarget=$line[0] $line[6] $line[7] +;Ident=$line[2];AlLength=$line[3];Mismatch=$line[4];Gapopen=$line[5];Evalue=$line[10];Bitscore=$line[11];Qlen=$line[13];Slen=$line[14]\n";
+	        last;
+	    }
+	}
+	
+	while (<BLAST>) {
+	    
+	    chomp;
+	    s/plus/\+/g;
+	    s/minus/\-/g;
+	    
+	    (my $qSeqId,    my $sSeqId,     my $pIdent,     my $alLength,   my $mismatch,
+	     my $gapOpen,   my $qStart,     my $qEnd,       my $sStart,     my $sEnd,
+	     my $eValue,    my $bitScore,   my $sStrand,    my $qLen,       my $sLen)
+	    = split(/\t/);
+    
+	    if ($currentSubjectSeq ne $sSeqId) {
+	        $currentSubjectSeq = $sSeqId;
+	    }
+	    
+	    ($sStart, $sEnd) = ($sEnd, $sStart) if ($sStart > $sEnd);
+	    
+	    print GFF "$sSeqId\tBLAST\tmatch\t$sStart\t$sEnd\t0.0\t$sStrand\t.\tTarget=$qSeqId $qStart $qEnd +;Ident=$pIdent;AlLength=$alLength;Mismatch=$mismatch;Gapopen=$gapOpen;Evalue=$eValue;Bitscore=$bitScore;Qlen=$qLen;Slen=$sLen\n";
+	}
+
+	close GFF;
+	close BLAST;
+	
+	return($gff_output);
+}
+
 1;
