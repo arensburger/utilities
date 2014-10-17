@@ -21,7 +21,7 @@ open (OUT, ">$config{out}") or die "cannot open output file $config{out}\n";
 <RM>;
 <RM>;
 <RM>;
-print OUT "te_name\tgene_type\tgene_creation_date\tgene_comments\tte_owner\tte_scaffold\tte_start\tte_end\tte_strand\tte_superfamily\tte_family\tfull_or_partial\n";
+print OUT "##gff-version 3\n";
 while (my $line = <RM>) {
 	my @data = split (" ", $line);
 	my $scaffold = $data[4]; 
@@ -41,7 +41,8 @@ while (my $line = <RM>) {
 	}
 
 	if ($sf) {
-		print OUT "$name\tTransposon\t2014-10-16\tpreliminary annotation\tparensburger\t$scaffold\t$b1\t$b2\t$ori\t$sf\t$fam\n";
+		print OUT "$scaffold\t\.\ttransposable_element\t$b1\t$b2\t\.\t$ori\t\.\tID=$name;Name=$sf:$fam;Note=Preliminary annotation\n"
+#		print OUT "$name\tTransposon\t2014-10-16\tpreliminary annotation\tparensburger\t$scaffold\t$b1\t$b2\t$ori\t$sf\t$fam\n";
 	}
 }
 close RM;
