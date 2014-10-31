@@ -9,19 +9,19 @@ use Getopt::Long;
 
 my @seq; #holds all the fastq file data in one array
 my $filename; #input file
-my $seqtype = "fa"; #type of input file, "fa" = fasta, "fq" = fastq
+my $seqtype; #type of input file, "fa" = fasta, "fq" = fastq
 my $outputname; # the base name for the output, by default the same basename as the input
 my $numpartitions; # number of partitions to split this into
 
 ##### read and check the inputs
 GetOptions(
-	'i:s'   => \$filename,
+	'in:s'   => \$filename,
 	't:s'	=> \$seqtype,
 	'o:s'	=> \$outputname,
 	'p:s'	=> \$numpartitions
 );
 unless ($filename and $numpartitions) {
-	die "usage: perl split_file.pl -i <input file name> -p <number of files to split this into> -t <OPTIONAL sequence type: fas, fastq, default fas>, -o <OPTIONAL base output name, default same base name as input>\n";
+	die "usage: perl split_file.pl -in <input file name> -p <number of files to split this into> -t <OPTIONAL sequence type: fas, fastq, default fas>, -o <OPTIONAL base output name, default same base name as input>\n";
 }
 # try to determine the input type
 (my $name, my $path, my $suffix) = fileparse($filename,qr"\..[^.]*$");
@@ -32,7 +32,9 @@ elsif (($suffix eq ".fq") or ($suffix eq ".fastq")) {
 	$seqtype = "fq";
 }
 else {
-	die "Cannot determine file type from the input name: $filename, $suffix";
+	unless ($seqtype) {	
+		die "Cannot determine file type from the input name: $filename, $suffix and -t option not set";
+	}
 }
 
 # determine the output name

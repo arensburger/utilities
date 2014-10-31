@@ -6,48 +6,6 @@ sub rc {
     return ($sequence);
 }
 
-#runs the phylip program dnadist (must be known to the current directory), input is a string with phylip formated data. Returns a string starting
-# the array size and containing the output of the distance calculation
-sub dnadist {
-	($phylip_seq) = @_;
-	my $return_sring; #holds the whole table as a string
-	my $array_size  = 0; #number of rows and columns in the array
-	use Shell;
-	my $sc = Shell->new; #$sc stands for "shell script"
-	
-	#create input file
-	open (OUTPUT, ">infile") or die;
-	print OUTPUT "$phylip_seq";
-	close OUTPUT;
-
-	#remove any existing "outfile" as is messes up the run
-	$sc-> rm("outfile");
-
-	#create parameter file and run dnadist
-	open (OUTPUT, ">param") or die;
-	print OUTPUT "Y";
-	close OUTPUT;
-	$sc-> dnadist(" < param");
-	#parse the output file
-	open (INPUT, "outfile") or die;
-	my $line = <INPUT>; #skip the first line
-	while ($line = <INPUT>) {
-		unless ((length $line) == 1) { #avoid the last line of outfile that is blank
-			$line =~ s/\s+/\t/g;
-			$return_string .= $line;
-			$array_size++;
-		}
-	}
-	
-	#put the array size at the start of the return string
-	$return_string = $array_size . "\t" . $return_string;
-	#clean up
-	$sc-> rm("infile");
-	$sc-> rm("outfile");
-	$sc-> rm("param");
-
-	return ($return_string);
-}
 #converts a fasta file to a phylip format, takes in a hash and returns a string
 sub ftophy {
 	my (%seq) = @_;
@@ -74,32 +32,6 @@ sub ftophy {
 	return ($return_string);
 }
 
-#runs clustalw to align sequences, take in a hash and returns a hash
-sub align {
-	my (%input) = @_;
-
-	use Shell;
-	my $sc = Shell->new; #$sc stands for "shell script"
-
-	#create input fasta file
-	open (OUTPUT, ">input.fas") or die;
-	foreach my $key (keys %input) {
-		print OUTPUT ">$key\n$input{$key}\n";
-	}
-	close OUTPUT;
-
-	#run clustal (assumes the systems knows about clustalw2
-	$sc-> clustalw2("-INFILE=input.fas -OUTPUT=FASTA -OUTFILE=align.fasta");
-
-	#parse the output file 
-	my %aligned = genometohash ("align.fasta");
-
-	#clean up files
-#	$sc-> rm("input.fas");
-#	$sc-> rm("align.fasta");
-	
-	return (%aligned);
-}
 #find the TIRs of a sequence
 sub findtirs {
 	my ($seq) = @_;
@@ -143,7 +75,7 @@ sub genometohash {
 	use strict;
 	(my $filename) = @_;
 	my %genome; #hash with the genome
-	my $seq;
+	my $seq="";
 	my $title;
 	open (INPUT, $filename) or die "cannot open input file $filename in sub genometohash\n";
 	while (my $line = <INPUT>) {
@@ -158,12 +90,14 @@ sub genometohash {
 			#chomp $line;
 			my @data = split(" ", $line);
 			$title = $data[0];
+			$title = substr $title, 1;
 			$seq = "";
 		}
 		elsif ($line =~ />(\S+)/) { #will only be true for the first line
 			#chomp $line;
 			my @data = split(" ", $line);
 			$title = $data[0];
+		$title = substr $title, 1;
                         $seq = "";
 		}
 		else {
@@ -359,14 +293,6 @@ sub scaff_seq
 	$filename = $dirname . "/" . $scaffold . '.fna';
 	($sequence, $i) = load_fna($filename);
 	return $substring = substr($sequence, $bound1, ($bound2 - $bound1));
-}
-
-#reverse complement
-sub rc {
-    my ($sequence) = @_;
-    $sequence = reverse $sequence;
-    $sequence =~ tr/ACGTRYMKSWacgtrymksw/TGCAYRKMWStgcayrkmws/;
-    return ($sequence);
 }
 
 #march 09, this script is defunct, now using "addzeros" instead
@@ -645,41 +571,68 @@ sub addzeros {
 		}
 	}
 }
-#find the TIRs of a sequence
-# sub findtirs {
-# 	my ($seq) = @_;
-# 
-# 	my $MISSMATCH = 3; #total allowable mismatches
-# 	my $endfound = 0; #boolean 0 until the end of the TIR is found
-# 	my $pos = 0; #current position in the sequence
-# 	my $lastgoodbase = 0; #position of the last match of bases
-# 	my $miss = 0; #number of non-matching sequences
-# 	while ($pos <= (0.5 * (length $seq)) && ($endfound == 0)) {
-# 	  my $leftbase = substr($seq, $pos, 1); #base on the left end
-# 	  my $rightbase = substr($seq, -$pos -1, 1);
-# 	  
-# 	  #update the current base
-# 	  if ($leftbase eq (rc $rightbase)) {
-# 	    $lastgoodbase = $pos;
-# 	  }
-# 	  else {
-# 	    $miss++;
-# 	  }
-# 
-# 	  #take stock if we need to stop
-# 	  if ($miss > $MISSMATCH) {
-# 	    $endfound = 1;
-# 	  }
-# 
-# 	  $pos++;
-# 	}
-# 	my $tir1 = substr($seq, 0, $lastgoodbase + 1);
-# 	my $tir2 = substr($seq, -$lastgoodbase - 1, $lastgoodbase + 1);
-# 
-# 	my @tirs;
-# 	$tirs[0] = $tir1;
-# 	$tirs[1] = $tir2;
-# 	
-# 	return(@tirs);
-#}
+
+# convert blast output to gff. Sebastien Guizard gave me this in July 2014.
+
+sub blastGFFConverter {
+	use strict;
+	use diagnostics;
+	use warnings;
+	use Getopt::Long;
+	use Term::ANSIColor;
+	use Data::Dumper;
+	
+	(my $blastfile) = @_;
+	
+	##> Define options
+	my %config;
+	
+	##> Setting Global Variables
+	$| = 1;
+	my $currentSubjectSeq = "";
+
+	open(BLAST, "<$blastfile") or die printError("Unable to open $blastfile\n", 1);
+	my $gff_output = File::Temp->new( UNLINK => 1, SUFFIX => '.gff' ); # temporary file with results blast 
+
+	while (1) {
+	    my @line = split(/\t/, <BLAST>);
+	    $line[12] =~ s/plus/\+/g;
+	    $line[12] =~ s/minus/\-/g;
+    
+	    if ($#line == 14) {
+	       # open(GFF, ">$config{out_gff_basename}.gff") or die printError("Unable to open $config{out_gff_basename}.gff\n", 1);   
+		open (GFF, ">$gff_output") or die "cannot open file $gff_output for gff file\n";
+	        $currentSubjectSeq = $line[1];
+	        ($line[8], $line[9]) = ($line[9], $line[8]) if ($line[8] > $line[9]);
+	        print GFF "$line[1]\tBLAST\tmatch\t$line[8]\t$line[9]\t0.0\t$line[12]\t.\tTarget=$line[0] $line[6] $line[7] +;Ident=$line[2];AlLength=$line[3];Mismatch=$line[4];Gapopen=$line[5];Evalue=$line[10];Bitscore=$line[11];Qlen=$line[13];Slen=$line[14]\n";
+	        last;
+	    }
+	}
+	
+	while (<BLAST>) {
+	    
+	    chomp;
+	    s/plus/\+/g;
+	    s/minus/\-/g;
+	    
+	    (my $qSeqId,    my $sSeqId,     my $pIdent,     my $alLength,   my $mismatch,
+	     my $gapOpen,   my $qStart,     my $qEnd,       my $sStart,     my $sEnd,
+	     my $eValue,    my $bitScore,   my $sStrand,    my $qLen,       my $sLen)
+	    = split(/\t/);
+    
+	    if ($currentSubjectSeq ne $sSeqId) {
+	        $currentSubjectSeq = $sSeqId;
+	    }
+	    
+	    ($sStart, $sEnd) = ($sEnd, $sStart) if ($sStart > $sEnd);
+	    
+	    print GFF "$sSeqId\tBLAST\tmatch\t$sStart\t$sEnd\t0.0\t$sStrand\t.\tTarget=$qSeqId $qStart $qEnd +;Ident=$pIdent;AlLength=$alLength;Mismatch=$mismatch;Gapopen=$gapOpen;Evalue=$eValue;Bitscore=$bitScore;Qlen=$qLen;Slen=$sLen\n";
+	}
+
+	close GFF;
+	close BLAST;
+	
+	return($gff_output);
+}
+
 1;
