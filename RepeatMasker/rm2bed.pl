@@ -10,8 +10,7 @@ my $MIN_FRACTION = 0; # minimum fraction of length of RM hit to length of origin
 my %config;
 GetOptions(\%config,
 	'rmout=s',
-	'consensi=s',
-	'out=s',
+	'out=s'
 );
 
 ##> Check if no mandatory parameter is missing and set defaults
@@ -60,10 +59,9 @@ close OUT;
 sub printUsage{
 
 print STDOUT "DESCRIPTION: This program takes the .out file of a RepeatMakser run and converts it into a gff3 file\n";
-print STDOUT "USAGE : rm2gff3.pl -r \"RepeatMasker .out file\" -c \"fasta file of potential element\" -o \"output file\"
+print STDOUT "USAGE : rm2gff3.pl -r \"RepeatMasker .out file\" -o \"output file\"
 Options : 
     -r | rmout		RepeatMasker .out file (Mandatory)
-    -c | consensi	Output of RepeatModeler or other suggested elements (Mandatory)
     -o | out   		Name of ouput file (default \"out\")\n";
     exit;
 }
