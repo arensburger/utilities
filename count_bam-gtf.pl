@@ -42,7 +42,7 @@ while (my $line = <INPUT>) {
 #	}
 
 # update as necessary for gff file
-	if ($line =~ /\sgene\s+(\d+)\s+(\d+).+ID=(\S+);/) {
+	if ($line =~ /\sCDS\s+(\d+)\s+(\d+).+ID=(\S+);/) {
 		my $b1 = $1;
 		my $b2 = $2;
 		my $id = $3;
