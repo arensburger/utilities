@@ -5,27 +5,36 @@ use Getopt::Long;
 
 my $filename; #name of input file
 my $renamedup=0; #rename duplicates
+my $frequency=0; #report frequency of nucleotide
 my $outputname;
 
 ##### read and check the inputs
 GetOptions(
 	'in:s'   => \$filename,
 	'r:s'	=> \$renamedup,
-#	'l:s'	=> \$length,
+	'f:s'	=> \$frequency,
 #	'o:s'	=> \$outputname,
 #	'n:s'	=> \$n,
 );
 unless ($filename) {
-	die "usage perl checkfile.pl <-in file name REQUIRED> <-r rename duplicates, default 0 (no) OPTIONAL>\n";
+	die "usage perl checkfile.pl <-in file name REQUIRED> <-r rename duplicates, default 0 (no) OPTIONAL> <-f report frequency, default 0 (no) OPTIONAL>\n";
 }
 open (INPUT, $filename) or die "cannot open input file $filename\n";
 
 #go through the the file
 my %names; # hash or unique names
+my %bases; # bases as key and frequency as value
 while (my $line=<INPUT>) {
 	if ($line =~ />(\S+)/) { #only looking at names up to first white space
 		$names{$1} += 1;
 	} 
+	elsif ($frequency) {
+		chomp $line;
+		my @text=split("", $line);
+		foreach my $base (@text) {
+			$bases{$base}+=1;
+		}
+	}
 }
 close INPUT;
 
@@ -81,4 +90,10 @@ if ($renamedup) {
 		}
 	}
 	close INPUT;
+}
+
+if ($frequency) { #if user want frequency report
+	foreach my $category (keys %bases) {
+		print "$category\t$bases{$category}\n";
+	}
 }
