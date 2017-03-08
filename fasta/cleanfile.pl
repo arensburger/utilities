@@ -48,6 +48,8 @@ while (my $line=<INPUT>) {
 	}
 	else {
 		$line =~ s/\s//g; #remove white spaces from the current line
+		$line =~ s/\0//g; #remove null characters
+
 		if ($n) {
 			$line =~ s/N//ig; #remove N's
 #			$line =~ s/n//g; #remove N's
