@@ -5,8 +5,9 @@
 use strict;
 use File::Temp();
 
-my $firefox_dictionary_file = "/home/peter/.mozilla/firefox/213va4j0.default/persdict.dat";
-my $libreoffice_dictionary_file = "/home/peter/Dropbox/Libreoffice_files/wordbook/standard.dic";
+my $firefox_dictionary_file = "/home/peter/.mozilla/firefox/l6mcb3z8.default/persdict.dat";
+my $libreoffice_dictionary_file = "/home/peter/Dropbox/Libreoffice files/wordbook/standard.dic";
+my $backup_libreoffice_dictionary_file = "/home/peter/Dropbox/Libreoffice files/wordbook/standard.dic.old";
 
 ### check the command line inputs
 #if (@ARGV == 0) { # check if no arguments have been provided
@@ -36,12 +37,45 @@ open (SEQ, ">$temp_file") or die "cannot open temporary file $temp_file\n";
 foreach my $key (keys %words) {
 	print SEQ "$key\n";
 }
+close (SEQ);
 
 ## check the temp_file is not empty and copy temporary file to permanent location
 my @wc_command = split " ", `wc -l $temp_file`;
 if ($wc_command[0] > 0) {
-	`cp $temp_file $firefox_dictionary_file`;
+
+	# update firefox
+	my $copy_name = fix_spaces($firefox_dictionary_file);
+	`cp $temp_file $copy_name`; 
+
+	#update libreoffice
+	my $copy_name1 = fix_spaces($libreoffice_dictionary_file);
+	my $copy_name2 = fix_spaces($backup_libreoffice_dictionary_file);
+	`cp $copy_name1 $copy_name2`;
+	open (LODIC, ">$libreoffice_dictionary_file") or die "cannot open file $libreoffice_dictionary_file\n";
+	print LODIC "OOoUserDict1\n";
+	print LODIC "lang: <none>\n";
+	print LODIC "type: positive\n";
+	print LODIC "---\n";
+	foreach my $key (keys %words) {
+		print LODIC "$key\n";
+	}
+	close LODIC;
 }
 else {
 	die "ERROR, combined file was empty\n";
+}
+
+# replaces spaces with \<space>
+sub fix_spaces {
+	my ($text) = @_;
+	my $return_text;
+	for (my $i=0; $i<length($text); $i++) {
+		if (substr($text, $i, 1) eq " ") {
+			$return_text .= '\ ';
+		}
+		else {
+			$return_text .= substr($text, $i, 1);
+		}
+	}
+	return($return_text);
 }
