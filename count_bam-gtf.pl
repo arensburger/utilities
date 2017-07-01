@@ -13,14 +13,16 @@ my $bam_filename; #name of input file
 my $gtf_filename; #name of gtf
 my $outputname; #name of the output
 my $librarysize; # size of the bam file to use 
-my $strand; #if set as option then only count reads in the opposite direction to gff description
+my $strand; # if set as option then only count reads in the opposite direction to gff description
+my $logtransform; # if set then log transform (base 2) the output
 
 GetOptions(
 	'b:s'   => \$bam_filename,
 	'g:s'	=> \$gtf_filename,
 	'o:s'	=> \$outputname,
 	't:s'	=> \$librarysize,
-	's'     => \$strand
+	's'     => \$strand,
+	'l'	=> \$logtransform
 );
 die ("usage: perl count_bam-gtf.pl -b <REQUIRED: input bam file> -g <REQUIRED: GTF formated file > -o <OPTIONAL: output name> -t <OPTIONAL: number of reads that should be in bam file, used for RPKM calculation> -s <OPTIONAL: only count reads that are in the opposite direction to gff annoation>\n") unless ($bam_filename and $gtf_filename);
 if ($outputname) {
@@ -94,6 +96,10 @@ if ($outputname) {
 		my $rpkm = "NA";
 		if ($librarysize) {
 			$rpkm = ((10 ** 9) * $transcript_count{$transcript})/($transcriptlen{$transcript} * $librarysize);
+			if ($logtransform) {
+				my $log_rpkm = log2($rpkm + 1); #add 1 to avoid problems with zeros
+				$rpkm = $log_rpkm;
+			}
 		}
 		if ($outputname) {
 			print FINAL_OUTPUT "$transcript\t$rpkm\n";
@@ -109,3 +115,8 @@ my $num_reads = keys (%uniquereads);
 
 print STDERR "A total of $num_intersections intersections were found for $num_transcripts transcripts and $num_reads reads\n";
 close OUTPUT;
+
+sub log2 {
+	my $n = shift;
+	return log($n)/log(2);
+}
