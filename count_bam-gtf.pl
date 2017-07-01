@@ -13,14 +13,16 @@ my $bam_filename; #name of input file
 my $gtf_filename; #name of gtf
 my $outputname; #name of the output
 my $librarysize; # size of the bam file to use 
+my $strand; #if set as option then only count reads in the opposite direction to gff description
 
 GetOptions(
 	'b:s'   => \$bam_filename,
 	'g:s'	=> \$gtf_filename,
 	'o:s'	=> \$outputname,
-	't:s'	=> \$librarysize 
+	't:s'	=> \$librarysize,
+	's'     => \$strand
 );
-die ("usage: perl count_bam-gtf.pl -b <REQUIRED: input bam file> -g <REQUIRED: GTF formated file > -o <OPTIONAL: output name> -t <OPTIONAL: number of reads that should be in bam file>\n") unless ($bam_filename and $gtf_filename);
+die ("usage: perl count_bam-gtf.pl -b <REQUIRED: input bam file> -g <REQUIRED: GTF formated file > -o <OPTIONAL: output name> -t <OPTIONAL: number of reads that should be in bam file, used for RPKM calculation> -s <OPTIONAL: only count reads that are in the opposite direction to gff annoation>\n") unless ($bam_filename and $gtf_filename);
 if ($outputname) {
 	open (FINAL_OUTPUT, ">$outputname") or die ("cannot open output file $outputname");
 }
@@ -42,7 +44,7 @@ while (my $line = <INPUT>) {
 #	}
 
 # update as necessary for gff file
-	if ($line =~ /\sCDS\s+(\d+)\s+(\d+).+ID=(\S+);/) {
+	if ($line =~ /\sCDS\s+(\d+)\s+(\d+).+ID=(\S+)/) {
 		my $b1 = $1;
 		my $b2 = $2;
 		my $id = $3;
@@ -55,8 +57,18 @@ close OUTPUT;
 
 # create a file with the intersection
 my $intersect_file = File::Temp->new( UNLINK => 1, SUFFIX => '.bed' );
-`intersectBed -abam $bam_filename -b $gtf_short_filename -bed -wb > $intersect_file`;
-`cp $intersect_file temp.bed`;
+#print "$bam_filename\n";
+#print "$gtf_short_filename\n";
+#print "$intersect_file\n";
+if ($strand) {
+	`intersectBed -abam $bam_filename -b $gtf_short_filename -bed -wb -s > $intersect_file`;
+}
+else {
+	`intersectBed -abam $bam_filename -b $gtf_short_filename -bed -wb > $intersect_file`;
+}
+
+#`cp $intersect_file temp.bed`;
+
 # summarize the intersection data
 my %uniquereads; #names of unique reads
 my %transcript_count; #transcript name as key and counts of reads intersecting as value
@@ -64,7 +76,7 @@ my $num_intersections; #number of intersections
 open (INPUT, $intersect_file) or die "ERROR, could not open temporary file $intersect_file";
 while (my $line = <INPUT>) {
 #	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+transcript_id\s\"(\S+)\"/) {
-	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+ID=(\S+);/) { # update as necessary for gff file
+	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+ID=(\S+)/) { # update as necessary for gff file
 		my $readname = $1;
 		my $transcript = $2;
 		$transcript_count{$transcript} += 1;
