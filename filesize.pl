@@ -15,7 +15,7 @@ GetOptions(
 	'f:s'   => \$fileformat,
 #	'o:s'	=> \$outputname
 );
-die ("usage: perl filesize.pl -in <REQUIRED: input file> -f <OPTIONAL: input file format: text (default), fasta, fastq>\nNote: blank and all white character lines are ignored\n") unless ($inputfile);
+die ("usage: perl filesize.pl -in <REQUIRED: input file> -f <OPTIONAL: input file format: text (default), fasta, fastq>\n") unless ($inputfile);
 if ($fileformat) {
 	die ("do not recognize file format $fileformat\n") unless (($fileformat eq "text") or ($fileformat eq "fasta") or ($fileformat eq "fastq"));
 }
