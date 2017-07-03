@@ -20,12 +20,16 @@ if ($fileformat) {
 	die ("do not recognize file format $fileformat\n") unless (($fileformat eq "text") or ($fileformat eq "fasta") or ($fileformat eq "fastq"));
 }
 
-open (INPUT, $inputfile) or die "cannot open input file $inputfile\n";
-while (my $line = <INPUT>) {
-	if ($line =~ /\S+/) { #line must have at least one non white character
-		$number_of_lines++;
-	}
-}
+#open (INPUT, $inputfile) or die "cannot open input file $inputfile\n";
+#while (my $line = <INPUT>) {
+#	if ($line =~ /\S+/) { #line must have at least one non white character
+#		$number_of_lines++;
+#	}
+#}
+
+my $command_output = `wc -l $inputfile`;
+my @data = split " ", $command_output;
+$number_of_lines = $data[0];
 
 if ($fileformat eq "text") {
 	$filesize = $number_of_lines;
