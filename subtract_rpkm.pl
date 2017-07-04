@@ -19,19 +19,26 @@ die ("usage: perl subtract_rpkm.pl -in <REQUIRED: input file, tab delimited text
 open (INPUT, $inputfile) or die ("cannot open file $inputfile\n");
 if ($headers) {
 	my $line = <INPUT>;
-	print $line;
+	my @data = split(" ", $line);
+	for (my $i=1; $i < ((scalar @data)); $i++) {
+		print "\t$data[$i]";
+	}
+	print "\n";
 }
 while (my $line = <INPUT>) {
 	if ($line =~ /\S+/) { # only consider non-empty lines
 		my @data = split(" ", $line);
 		print "$data[0]";
-		for (my $i=2; $i < ((scalar @data)-1); $i++) {
+		for (my $i=2; $i < ((scalar @data)); $i++) {
 			my $new_rpkm = $data[$i] - $data[1];
+#print "$line";
+#print "$data[$i], $data[1]\n";
 			if ($new_rpkm < 0) {
 				$new_rpkm = 0;
 			}
 			print "\t$new_rpkm";
 		}
+#exit;
 		print "\n";
 	}
 }
