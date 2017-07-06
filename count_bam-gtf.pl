@@ -15,6 +15,9 @@ my $outputname; #name of the output
 my $librarysize; # size of the bam file to use 
 my $strand; #if set as option then only count reads in the opposite direction to gff description
 my $logtransform; # if set then log transform (base 2) the output
+my $report_rpkm; # if set output RPKM values
+my $report_tpm; #if set output RPKM
+my $report_count; # if set reports the raw count per transcript
 
 GetOptions(
 	'b:s'   => \$bam_filename,
@@ -22,9 +25,16 @@ GetOptions(
 	'o:s'	=> \$outputname,
 	't:s'	=> \$librarysize,
 	's'     => \$strand,
-	'l'	=> \$logtransform
+	'l'	=> \$logtransform,
+	'c'	=> \$report_count,
+	'r'	=> \$report_rpkm,
+	'p'	=> \$report_tpm
 );
-die ("usage: perl count_bam-gtf.pl -b <REQUIRED: input bam file> -g <REQUIRED: GTF formated file > -o <OPTIONAL: output name> -t <OPTIONAL: number of reads that should be in bam file, used for RPKM calculation> -s <OPTIONAL: only count reads that are in the opposite direction to gff annoation> -l <OPTIONAL: report reads as log transformed + 1\n") unless ($bam_filename and $gtf_filename);
+die ("usage: perl count_bam-gtf.pl -b <REQUIRED: input bam file> -g <REQUIRED: GTF formated file > -o <OPTIONAL: output name> [REQUIRED: need to select one or more of the following ouputs -c (raw count per GTF feature) -r (RPKM) -p (TPM) ] -t <OPTIONAL: number of reads that should be in bam file, used for RPKM and TPM calculation> -s <OPTIONAL: only count reads that are in the opposite direction to gff annoation> -l <OPTIONAL: report reads as log transformed + 1\n") unless ($bam_filename and $gtf_filename);
+
+unless ($report_count or $report_rpkm or $report_tpm) {
+	die ("Need to select at least one type of output -c, -p, and/or -t");
+}
 if ($outputname) {
 	open (FINAL_OUTPUT, ">$outputname") or die ("cannot open output file $outputname");
 }
@@ -111,29 +121,68 @@ while (my $line = <INPUT>) {
 }
 
 #output the data
-if ($outputname) {
+#if ($outputname) {
+	
+	#Caluclate TPM (per http://www.rna-seqblog.com/rpkm-fpkm-and-tpm-clearly-explained/ )
+	my $totalRPK;
+	my %RPK;
+	my %TPM;
+	foreach my $transcript (keys %transcript_count) {
+		$RPK{$transcript} = $transcript_count{$transcript}/$transcriptlen{$transcript};		
+		$totalRPK +=  $RPK{$transcript};
+	}
+	my $permillion = $totalRPK/(10 ** 6);
+	foreach my $transcript (keys %RPK) {
+		$TPM{$transcript} = $RPK{$transcript}/$permillion;
+	}
+
+
+	# Calculate RPKM and output data
 	foreach my $transcript (keys %transcript_count) {
 		my $rpkm = "NA";
+		my $tpm = "NA";
 		if ($librarysize) {
-			$rpkm = ((10 ** 9) * $transcript_count{$transcript})/($transcriptlen{$transcript} * $librarysize);
+			$rpkm = ((10 ** 6) * $transcript_count{$transcript})/($transcriptlen{$transcript} * $librarysize);
+			$tpm = $TPM{$transcript};
 			if ($logtransform) {
 				my $log_rpkm = log2($rpkm + 1); #add 1 to avoid problems with zeros
 				$rpkm = $log_rpkm;
+				my $log_tpm = log2($tpm + 1);
+				$tpm = $log_tpm;
 			}
 		}
+
+		my $report_data; # merging of data to report
+		if ($report_count) {
+			$report_data .= "\t$transcript_count{$transcript}";
+		}
+		if($report_rpkm) {
+			$report_data .= "\t$rpkm";
+		}
+		if ($report_tpm) {
+			$report_data .= "\t$tpm";
+		}
+
 		if ($outputname) {
-			print FINAL_OUTPUT "$transcript\t$rpkm\n";
+			print FINAL_OUTPUT "$transcript", "$report_data\n";
 		}
 		else {
-			print "$transcript\t$transcript_count{$transcript}\t$rpkm\n";
+			print "$transcript", "$report_data\n";
 		}
 	}
-}
+#}
 
 my $num_transcripts = keys (%transcript_count);
 my $num_reads = keys (%uniquereads);
 
 print STDERR "A total of $num_intersections intersections were found for $num_transcripts transcripts and $num_reads reads;  $num_no_intersections elements had no intersections\n";
+if ($logtransform) {
+	print STDERR "\ndata are log base2 + 1 transformed\n";
+}
+print STDERR "\norder of reporting (if multiple outputs selected) 1) count, 2) rpkm, 3) tpm\n";
+if ($strand) {
+	print STDERR "\nonly reads in opposite direction to gff/gtf feature are counted\n";
+}
 close OUTPUT;
 
 sub log2 {
