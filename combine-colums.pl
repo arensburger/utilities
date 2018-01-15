@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+# January 2018 upated to report mutliple data points
 # July 2017 updated to allow options
 
 use strict;
@@ -12,18 +13,22 @@ GetOptions(
 	'in:s'  => \$filenames,
 	'z'	=> \$zeros,
 );
-die ("usage: perl combine-columns.pl -in <REQUIRED: input files separated by commas> -z <OPTIONAL: put zeros where RPKMs are missing>>\n") unless ($filenames);
+die ("usage: perl combine-columns.pl -in <REQUIRED: input files separated by commas> -z <OPTIONAL: put zeros where values are missing>>\n") unless ($filenames);
 
+# read the data and put results into %reads
 my @filenames = split (",", $filenames);
-for (my $i=0; $i < scalar @filenames; $i++) {
+for (my $i=0; $i < scalar @filenames; $i++) { # loop through the file names
 	open (INPUT, $filenames[$i]) or die "cannot open file $filenames[$i]\n";
-	while (my $line = <INPUT>) {
+	while (my $line = <INPUT>) { #loop through each line of the file
 		my @data = split (" ", $line);
-		$reads{$data[0]}[$i] = $data[1];
+		my $first_element = shift @data; 
+		my $data2string = join "\t", @data;
+		$reads{$first_element}[$i] = $data2string;
 	}
 	close INPUT;
 }
 
+# report results
 for my $name (keys %reads) {
 	print "$name";
 	for (my $i=0; $i < scalar @filenames; $i++) {
