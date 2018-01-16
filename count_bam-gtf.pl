@@ -3,6 +3,7 @@
 # August 2013.  This script takes as input a .bam file and a gtf.  Reports the number of overlaps
 # makes use of bedtools (must be installed)
 # Sept 2016. Updated so a size of a bam file can be added and rpkm is calculated
+# January 2018 Make sure bedtools is installed.  Also, the gff file cannot have spaces in the ID, replace spaces with "-"
 
 use strict;
 use File::Temp();
@@ -63,6 +64,13 @@ while (my $line = <INPUT>) {
 		$transcriptlen{$id} = $b2 - $b1;
 		print OUTPUT $line;
 	}
+	if ($line =~ /\stRNA\s+(\d+)\s+(\d+).+ID=(\S+)/) {
+                my $b1 = $1;
+                my $b2 = $2;
+                my $id = $3;
+                $transcriptlen{$id} = $b2 - $b1;
+                print OUTPUT $line;
+        }
 }
 close INPUT;
 close OUTPUT;
@@ -82,6 +90,8 @@ else {
 	`intersectBed -abam $bam_filename -b $gtf_short_filename -bed -wb > $intersect_file`;
 	`intersectBed -a $gtf_short_filename -b $bam_filename -v > $no_intersect_file`;
 }
+#`cp $gtf_short_filename temp.gtf`;
+#print "intersectBed -abam $bam_filename -b $gtf_short_filename -bed -wb > $intersect_file\n"; exit;
 
 #`cp $intersect_file temp.bed`;
 #`cp $no_intersect_file no_temp.bed`;
@@ -142,7 +152,7 @@ while (my $line = <INPUT>) {
 		my $rpkm = "NA";
 		my $tpm = "NA";
 		if ($librarysize) {
-			$rpkm = ((10 ** 6) * $transcript_count{$transcript})/($transcriptlen{$transcript} * $librarysize);
+			$rpkm = ((10 ** 9) * $transcript_count{$transcript})/($transcriptlen{$transcript} * $librarysize);
 			$tpm = $TPM{$transcript};
 			if ($logtransform) {
 				my $log_rpkm = log2($rpkm + 1); #add 1 to avoid problems with zeros
