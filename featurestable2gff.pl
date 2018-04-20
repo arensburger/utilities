@@ -28,7 +28,7 @@ while (my $line = <INPUT>) {
 		$type[$i] = "exon";
 		$line = <INPUT>;
 		if ($line =~ /^\s+product\s(.+)/) {
-			$ID[$i] = $1;
+			$ID[$i] = replace_spaces($1);
 			chomp $ID[$i];
 			$i++;
 		}
@@ -43,7 +43,7 @@ while (my $line = <INPUT>) {
 		$type[$i] = "exon";
 		$line = <INPUT>;
 		if ($line =~ /^\s+gene\s(.+)/) {
-			$ID[$i] = $1;
+			$ID[$i] = replace_spaces($1);
 			chomp $ID[$i];
 			$i++;
 		}
@@ -58,7 +58,7 @@ while (my $line = <INPUT>) {
 		$type[$i] = "exon";
 		$line = <INPUT>;
 		if ($line =~ /^\s+product\s(.+)/) {
-			$ID[$i] = $1;
+			$ID[$i] = replace_spaces($1);
 			chomp $ID[$i];
 			$i++;
 		}
@@ -115,4 +115,11 @@ elsif ($format eq "gtf") {
 }
 else {
 	die "cannot recognize output format: $format\n";
+}
+
+# replaces spaces with underscores
+sub replace_spaces {
+	my ($string) = @_;
+	$string =~ s/ /_/g;
+	return ($string);
 }
