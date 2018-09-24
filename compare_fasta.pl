@@ -22,11 +22,15 @@ my %f1headers; # holds the header as key and the number of times it matches to h
 open (INPUT, $file1) or die "cannot open $file1\n";
 while (my $line = <INPUT>) {
 #	if ($line =~ />(\S+)/) {
-	if ($line =~ />(TF\d+)/) {
+	if ($line =~ /lcl\|(\S+?)_/) {
 		$f1headers{$1} = 0;
 		$num_h1++;
 	}
-	elsif ($line =~ /lcl\|(\S+?)_/) {
+	elsif($line =~ />(TF\d+)/) {
+		$f1headers{$1} = 0;
+		$num_h1++;
+	}
+	elsif($line =~ />(\S+)/) {
 		$f1headers{$1} = 0;
 		$num_h1++;
 	}
@@ -60,13 +64,6 @@ foreach my $h (keys %f1headers) {
 }
 
 ### print the results
-#my $numh1inh2; # number of h1 headers found in h2
-#foreach my $h (keys %f1headers) {
-#	if ($f1headers{$h}) {
-#		$numh1inh2++;
-#	}
-#}
-
 print "number of headers in file 1 (h1): $num_h1\n";
 print "number of headers in file 2 (h2): $num_h2\n";
 print "number of h1 in h2: $numh1matchh2\n";
