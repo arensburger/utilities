@@ -22,7 +22,11 @@ my %f1headers; # holds the header as key and the number of times it matches to h
 open (INPUT, $file1) or die "cannot open $file1\n";
 while (my $line = <INPUT>) {
 #	if ($line =~ />(\S+)/) {
-	if ($line =~ />( TF\d+)/) {
+	if ($line =~ />(TF\d+)/) {
+		$f1headers{$1} = 0;
+		$num_h1++;
+	}
+	elsif ($line =~ /lcl\|(\S+?)_/) {
 		$f1headers{$1} = 0;
 		$num_h1++;
 	}
@@ -32,8 +36,8 @@ close INPUT;
 my $f2headers; # text file f2 headers
 open (INPUT, $file2) or die "cannot open $file2\n";
 while (my $line = <INPUT>) {
-#	if ($line =~ />(\S+)/) {
-	if ($line =~ />(TF\d+)/) {
+	if ($line =~ />(\S+)/) {
+#	if ($line =~ />(TF\d+)/) {
 		$f2headers .= $1;
 		$num_h2++;
 	}
