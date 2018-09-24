@@ -20,7 +20,9 @@ open (INPUT, $header_file) or die "cannot open header file $header_file\n";
 my @headers_to_remove;
 while (my $line = <INPUT>) {
 	chomp $line;
-	push @headers_to_remove, $line;
+	if ($line =~ /\S/) { # makes sure that blank lines don't get processed
+		push @headers_to_remove, $line;
+	}
 }
 
 ### read the fasta file
@@ -34,8 +36,6 @@ my @found; # array that is blank if the current sequence should be kept, and not
 while (my $line=<INPUT>) {
 	if ($line =~ /^>/) {
 		@found = grep {$line =~ /$_/} @headers_to_remove;
-#my $ha = scalar @found;
-#print "@found\n$ha\n";
 		unless (scalar @found) {
 			print $line;
 		}
