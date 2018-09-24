@@ -21,7 +21,8 @@ die ("usage: perl compare_fasta -1 <REQUIRED: input file in fasta format> -2 <RE
 my %f1headers; # holds the header as key and the number of times it matches to headers in file 2 as value
 open (INPUT, $file1) or die "cannot open $file1\n";
 while (my $line = <INPUT>) {
-	if ($line =~ />(\S+)/) {
+#	if ($line =~ />(\S+)/) {
+	if ($line =~ />( TF\d+)/) {
 		$f1headers{$1} = 0;
 		$num_h1++;
 	}
@@ -31,17 +32,18 @@ close INPUT;
 my $f2headers; # text file f2 headers
 open (INPUT, $file2) or die "cannot open $file2\n";
 while (my $line = <INPUT>) {
-	if ($line =~ />(\S+)/) {
+#	if ($line =~ />(\S+)/) {
+	if ($line =~ />(TF\d+)/) {
 		$f2headers .= $1;
 		$num_h2++;
 	}
-
 }
 close INPUT;
 
 ### compare the headers
 my $numh1matchh2; # number of headers from h1 that match h2
 my $numh1noh2; # number of headers from h1 that do not match h2
+my $head_print; # headers to print
 foreach my $h (keys %f1headers) {
 	if ($f2headers =~ /$h/) {
 		$f1headers{$h} += 1;
@@ -49,6 +51,7 @@ foreach my $h (keys %f1headers) {
 	}
 	else {
 		$numh1noh2++;
+		$head_print .= "$h\n";
 	}
 }
 
@@ -63,4 +66,5 @@ foreach my $h (keys %f1headers) {
 print "number of headers in file 1 (h1): $num_h1\n";
 print "number of headers in file 2 (h2): $num_h2\n";
 print "number of h1 in h2: $numh1matchh2\n";
-print "number of h1 not in h2 $numh1noh2\n"
+print "number of h1 not in h2 $numh1noh2\n";
+print "headers in h1 not in h2:\n$head_print";
