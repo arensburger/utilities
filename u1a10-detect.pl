@@ -1,6 +1,5 @@
 #!/usr/bin/perl
-
-# Peter Arensburger.  Takes a SAM file and report location of U1A10 overlaps
+# Takes a SAM file and report location of U1A10 overlaps
 # updated Oct 2013 to accept broader range of sam input, still needs lots of work
 
 use strict;
@@ -17,8 +16,8 @@ while (my $line = <INPUT>) {
 		my $contig = $3;
 		my $loc = $4;
 		my $seq = $5;
-	
-		if (($ori == 0) or ($ori == 256)) { 
+
+		if (($ori == 0) or ($ori == 256)) {
 			if (substr($seq, 0, 1) eq "T") {
 				$topu1{$loc} .= "$name,";
 			}
@@ -47,6 +46,6 @@ print "$location\n";
 	if (exists $botu1{$location2}) {
 		chop $topu1{$location};
 		chop $botu1{$location2};
-		print "$location\t$location2\t$topu1{$location}\t$botu1{$location2}\n";	
+		print "$location\t$location2\t$topu1{$location}\t$botu1{$location2}\n";
 	}
 }

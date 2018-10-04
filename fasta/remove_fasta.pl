@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 # This script take a fasta file and a list of headers and returns fasta without sequences with headers
 
 use strict;

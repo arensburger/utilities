@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-
 #August 2012.  Takes a SAM formated file as input, returns returns number of reads per transcript, but counting only one read per transcript if it maps to multiple locations on the same read
+# see the README file associated with this called ./utilities/README_countsamhits
 
 use strict;
 use File::Temp ();
@@ -116,7 +116,7 @@ close OUPUT;
 #counts the number of hits in the .bam file, but couting only one hit per transcript per read
 sub docounts {
 	my $filename = shift;
-	my %transhits; #holds the transcript name as key and [0] number of non-duplicated hits [1] number of duplicated hits 
+	my %transhits; #holds the transcript name as key and [0] number of non-duplicated hits [1] number of duplicated hits
 
 	#convert bam to sam
 	my $samfilename = File::Temp->new( UNLINK => 1, SUFFIX => '.sam' );
@@ -140,8 +140,8 @@ sub docounts {
 			if ($readname eq $current_read) { #still reading the current read lines
 				push @readlines, $line;
 			}
-			else { #got to a new read, need to process the old lines 
-				
+			else { #got to a new read, need to process the old lines
+
 				#process the @readlines with all the current lines of read
 				my %transcript; #names of transcript as key and number of hits as value
 				foreach my $rline (@readlines) {
@@ -175,4 +175,3 @@ sub docounts {
 
 	return(%transhits);
 }
-

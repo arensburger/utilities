@@ -1,13 +1,14 @@
 #!/usr/bin/perl
+# takes in a file and formats either fasta or fastq and return the number of reads in the files
 
 use strict;
 
 use Getopt::Long;
 
-my $inputfile; 
+my $inputfile;
 my $fileformat; # identifies the file format
 my $outputname; # output file
-my $number_of_lines; 
+my $number_of_lines;
 my $filesize;
 
 GetOptions(

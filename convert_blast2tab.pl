@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#Takes a blast output as text file and coverts it to a tab delimited file
 
 use strict;
 use Bio::SearchIO;
