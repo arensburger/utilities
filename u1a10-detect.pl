@@ -1,6 +1,5 @@
 #!/usr/bin/perl
-# Takes a SAM file and report location of U1A10 overlaps
-# updated Oct 2013 to accept broader range of sam input, still needs lots of work
+#Takes a SAM file and report location of U1A10 overlaps#updated Oct 2013 to accept broader range of sam input, still needs lots of work
 
 use strict;
 
