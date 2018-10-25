@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-
 # July 2014 takes a fasta file and turns it into a simple bed file
 
 use strict;
@@ -28,7 +27,7 @@ GetOptions (\%config,
 ##> Print USAGE if --help
 if ($config{help}) {printUsage(1);}
 
-##> Check if no mandatory parameter is missing 
+##> Check if no mandatory parameter is missing
 if (!exists $config{fasta})         {printError ("fasta option is MANDATORY ! \n", 0); printUsage();}
 if (!exists $config{out}) {$config{out} = "out";}
 
@@ -50,7 +49,7 @@ exit;
 sub printError{
     my $string = shift;
     my $exit = shift;
-    
+
     print STDERR $string;
     exit if $exit;
 }
@@ -60,8 +59,8 @@ sub printUsage{
 
     print STDOUT
 "USAGE : fasta2bed -f \"fasta format file\" -o \"base name of bed file\"
-    
-Options : 
+
+Options :
     -f | fasta		Input fasta file (Mandatory)
     -o | out   		Basename of bed ouput file (default \"out\")
     -v | verbose	MORE text dude !!!!

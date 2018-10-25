@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#Takes two fastq file (one in each direction), shuffles the sequences and returns files with the sequences randomized
 use strict;
 
 use strict;
@@ -28,7 +29,7 @@ if (!exists $config{out}) {$config{out} = "out";}
 
 my %seqstoprint; #holds number of line to print as key
 if ($config{r}) {
-	my $wc = `wc -l $config{1}`;	
+	my $wc = `wc -l $config{1}`;
 	my @data = split(" ", $wc);
 	my $fastqseqs = $data[0]/8; # number of sequences in pairs the fastq file
 	my @seqnum; #array holding sequence numbers
@@ -50,16 +51,16 @@ my $outname2 = "$config{out}" . "-2.fq";
 open (OUTPUT1, ">$outname1") or die "cannot open output file $outname1\n";
 open (OUTPUT2, ">$outname2") or die "cannot open output file $outname2\n";
 while (my $l1 = <INPUT1>) {
-	
+
 	$seqnum++;
 	my @data = split(" ", $l1);
-	$l1 = $data[0]; 
+	$l1 = $data[0];
 	my $l2 = <INPUT1> . <INPUT1> . <INPUT1>;
 	my $l3 =  <INPUT2>;
 	my @data = split(" ", $l3);
-	$l3 = $data[0]; 
+	$l3 = $data[0];
 	my $l4 = <INPUT2> . <INPUT2> . <INPUT2>;
-	
+
 	my $printok=0; # boolean for printing this or not
 	my $skip=0; # if randomize this be used to skip lines not in the array
 	if ($config{r}) {
@@ -81,8 +82,8 @@ while (my $l1 = <INPUT1>) {
 		print OUTPUT1 "$l1", "\n";
 		print OUTPUT1 "$l2";
 		print OUTPUT2 "$l3", "\n";
-		print OUTPUT2 "$l4";	
-	}	
+		print OUTPUT2 "$l4";
+	}
 }
 close INPUT1;
 close INPUT2;
@@ -98,7 +99,7 @@ close OUTPUT2;
 sub printUsage{
 
 print STDOUT "USAGE : perl randomfastq.pl -1 \"fastq file pair 1\" -2 \"fastq file pair 2\" -r \"number of random sequence pairs to pick out\" -o \"output file\"
-Options : 
+Options :
     -1 		fastq file in one direction (Mandatory)
     -2 		fastq file in other direction (Mandatory)
     -r 		Number of random sequences to output
