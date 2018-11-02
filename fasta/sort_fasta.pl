@@ -14,6 +14,7 @@ open (INPUT, $input_file) or die "Cannot open file $input_file\n";
 ### collect data
 my %seq; # holds the headers as key and sequences as values
 my $header = <INPUT>; # store the first header
+chomp $header;
 my $sequence; # current sequence
 while (my $line = <INPUT>) {
 	if ($line =~ /^>/) {
