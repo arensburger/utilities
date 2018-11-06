@@ -18,7 +18,7 @@ open (INPUT, $filename) or die "cannot open input file $filename\n";
 
 my %pat; # holds a unique copy of the pattern
 while (my $line = <INPUT>){
-	if ($line =~ /(pfam\d+)/) {
+	if ($line =~ /(Tpase_\S+)/) {
 		$pat{$1}=0;
 	}
 }

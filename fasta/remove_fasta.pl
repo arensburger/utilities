@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # This script take a fasta file and a list of headers and returns fasta without sequences with headers
+# currently set up only to only report match (opposite of standard, edit lines #42 and #48)
 
 use strict;
 use Getopt::Long;
@@ -37,12 +38,14 @@ my @found; # array that is blank if the current sequence should be kept, and not
 while (my $line=<INPUT>) {
 	if ($line =~ /^>/) {
 		@found = grep {$line =~ /$_/} @headers_to_remove;
-		unless (scalar @found) {
+		if (scalar @found){
+	#	unless (scalar @found) {
 			print $line;
 		}
 	}
 	else {
-		unless (scalar @found) {
+		if (scalar @found) {
+#		unless (scalar @found) {
 			print "$line";
 		}
 	}
