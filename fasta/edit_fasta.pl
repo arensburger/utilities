@@ -17,8 +17,8 @@ my $header = <INPUT>; # store the first header
 chomp $header;
 my $sequence; # current sequence
 while (my $line = <INPUT>) {
-	if ($line =~ /^>(.+_Ty1.+)/) {
-		print ">Ty1-$1\n";
+	if ($line =~ /^(>\S+?_)_*(.+)/) {
+		print "$1", "_", "$2", "\n";
 	}
 	else {
 		print "$line"
