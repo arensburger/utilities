@@ -26,23 +26,28 @@ open (OUTPUT2, ">$o2") or die "Cannot open file $o2\n";
 ### process inputs
 
 ## selected section of headers in file 1
-my @f1_short_header;
 my %fasta1_short_header; # same as %fasta1 but with shorted header
+my %short2long; # holds the short header as key and long header as value
 foreach my $key (keys %fasta1) {
 	if ($key =~ /__(XR_\S+?)-/) {
 		$fasta1_short_header{$1} = $fasta1{$key};
+		$short2long{$1} = $key;
 	}
 	elsif ($key =~ /__(XM_\S+?)-/) {
 		$fasta1_short_header{$1} = $fasta1{$key};
+		$short2long{$1} = $key;
 	}
 	elsif ($key =~ /__(\S+?)_/) {
 		$fasta1_short_header{$1} = $fasta1{$key};
+		$short2long{$1} = $key;
 	}
 	elsif ($key =~ /__(\S+)/) {
 		$fasta1_short_header{$1} = $fasta1{$key};
+		$short2long{$1} = $key;
 	}
 	else {
 		die "$key";
+		$short2long{$key} = $key;
 	}
 }
 
@@ -53,9 +58,41 @@ foreach my $h1_header (keys %fasta1_short_header) {
 		warn "found multiple matches to header $h1_header, using only one of them\n";
 	}
 	if (scalar @hits > 0) {
-		print OUTPUT1 ">$h1_header\n";
+
+		#process the header1 title to format it right
+		my $new_header1; # header1 formated for printing
+		if($short2long{$h1_header} =~ /^(\S+?__TF\d+)/) {
+			$new_header1 = $1;
+		}
+		elsif ($short2long{$h1_header} =~ /^(\S+?__\S+)_FLYBASE/){
+			$new_header1 = $1;
+		}
+		elsif ($short2long{$h1_header} =~ /^(\S+?__\S+)_/){
+			$new_header1 = $1;
+		}
+		elsif ($short2long{$h1_header} =~ /^(\S+?__\S+)-/){
+			$new_header1 = $1;
+		}
+		elsif ($short2long{$h1_header} =~ /^(\S+?__\S+)/){
+			$new_header1 = $1;
+		}
+		else {
+			die "$short2long{$h1_header}\n";
+		}
+
+		#process header2
+		my $new_header2;
+		if ($hits[0] =~ /^(\S+?)\|/) {
+			$new_header2 = $1;
+		}
+		else {
+			$new_header2 = $hits[0];
+		}
+
+
+		print OUTPUT1 ">$new_header1\n";
 		print OUTPUT1 "$fasta1_short_header{$h1_header}\n";
-		print OUTPUT2 ">$hits[0]\n";
+		print OUTPUT2 ">$new_header2\n";
 		print OUTPUT2 "$fasta2{$hits[0]}\n";
 	}
 	else {
@@ -73,7 +110,7 @@ sub fasta2hash {
 	while (my $line = <INPUT>) {
 		if (($line =~ />(\S+)/) && (length $seq > 1)) {
 			if (exists $genome{$title}) {
-				print STDERR "error in sub genometohash, two contigs have the name $title, ignoring one copy\n";
+				warn "warning in sub genometohash, two contigs have the name $title, ignoring one copy\n";
 			}
 			else {
 				$genome{$title} = $seq;
