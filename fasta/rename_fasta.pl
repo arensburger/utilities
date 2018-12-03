@@ -21,9 +21,9 @@ my $i=0;
 while (my $line = <INPUT>) {
 	if ($line =~ />(.+)\s$/) {
 		print ">$suffix", "$i", " ", "$1", "\n";
+		$i++;
 	}
 	else {
 		print "$line";
 	}
-	$i++;
 }
