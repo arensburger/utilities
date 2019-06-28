@@ -15,18 +15,18 @@ unless ($inputfilename and $length) {
 	die "usage perl filter_fq_by_length.pl <-in, input fastq file REQUIRED> <-l minimum length to output REQUIRED>";
 }
 
-open (INPUT, $ARGV[0]) or die;
-my $i=0;
-while (my $line = <INPUT>) {
-  if ($line =~ /@(\S+)/) {
-    print ">S$i\n";
-    $i++;
-  }
-  else {
-    die "Was expecting header but got\n$line";
-  }
-  $line = <INPUT>;
-  print "$line";
-  <INPUT>;
-  <INPUT>;
+open (INPUT, $inputfilename) or die "cannot open file $inputfilename\n";
+while (my $l1 = <INPUT>) {
+	my $l2 = <INPUT>;
+	my $l3 = <INPUT>;
+	my $l4 = <INPUT>;
+
+	my $sequence = $l2;
+	chomp $sequence
+	if (length $sequence >= $length) {
+		print "$l1";
+		print "$l2";
+		print "$l3";
+		print "$l4";
+	}
 }
