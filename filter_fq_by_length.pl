@@ -23,7 +23,7 @@ while (my $l1 = <INPUT>) {
 
 	my $sequence = $l2;
 	chomp $sequence;
-	if (length $sequence >= $length) {
+	if ((length $sequence) >= $length) {
 		print "$l1";
 		print "$l2";
 		print "$l3";
