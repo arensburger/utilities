@@ -19,7 +19,7 @@ GetOptions(
 	'o:s'	=> \$outputname
 );
 #check inputs
-die ("usage: perl split_pair.pl -i <REQUIRED: input file file> -t <OPTIONAL: sequence type fq or fa (default fq)> -o <OPTIONAL: output name it will be followed by -pair1 or -pair2\n") unless ($filename);
+die ("usage: perl split_pair.pl -i <REQUIRED: input file file> -t <OPTIONAL: sequence type fq or fa (default fq)> -o <OPTIONAL: output name it will be followed by -pair1.fq or -pair2.fq\n") unless ($filename);
 unless (($seqtype eq "fq") or ($seqtype eq "fa")) {
 	die "Sequence type (-t) can only be fq or fa\n";
 }
@@ -29,8 +29,8 @@ my (@suffixes) = (".fastq", ".fq", ".fasta", ".fa", ".fas"); #possible suffixes 
 unless ($outputname) {
 	$outputname = basename($filename, @suffixes);
 }
-my $file1name = $outputname . "-pair1";
-my $file2name = $outputname . "-pair2";
+my $file1name = $outputname . "-pair1.fq";
+my $file2name = $outputname . "-pair2.fq";
 
 #initalize line counter
 my $linecounter = 1;
