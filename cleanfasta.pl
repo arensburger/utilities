@@ -9,6 +9,7 @@ my $length=0; #maximum length of output lines, 0 indicates that the length shoul
 my $n=0; #boolean, 0 keep N's, 1 remove N's
 my $fix_header=0; #boolean, fix sequence header if set to 1
 my %headers; #holds the text of all the headers, uses to warn if there are duplicates
+my $change_case=0; #boolean, change the case to all caps
 
 ##### read and check the inputs
 GetOptions(
@@ -16,9 +17,15 @@ GetOptions(
 	'l:s'	=> \$length,
 	'n:s'	=> \$n,
 	'h:s' => \$fix_header,
+	'c:s' => \$change_case,
 );
 unless ($filename) {
-	die "usage perl cleanfasta.pl <-in file name> <-l OPTIONAL maximum line length in characters, default no maximum> <-n OPTIONAL remove N characters, default no> <-h OPTIONAL fix headers, provide any non-zero value>\n";
+	die "usage perl cleanfasta.pl
+<-in REQUIRED file name>
+<-l OPTIONAL maximum line length in characters, default no maximum>
+<-n OPTIONAL remove N characters, default no>
+<-h OPTIONAL fix headers, provide any non-zero value>
+<-c OPTIONAL change the case to upper case, set to any non-zero value>\n";
 }
 
 #### load the sequences one at a time and process them
@@ -66,6 +73,9 @@ sub output_header {
 
 sub output_sequence {
 	my($seq) = @_;
+	if ($change_case) {
+		$seq = uc($seq);
+	}
 	if ($length) { #if a maximum line length has been specified limit the output per line
 		my @line_array = ( $seq =~ m/.{1,$length}/g);
 		for (my $i=0; $i < scalar @line_array; $i++) {
