@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Feb 2020, Takes a fasta file and reformats it according to the rules set. Improvement on cleanfile.pl
+# Feb 2020, Takes a fasta file and reformats it according to the rules set. Improvement on cleanfile.pl.
 
 use strict;
 use Getopt::Long;
