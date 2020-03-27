@@ -24,9 +24,8 @@ my @filenames = split (",", $filenames); # the comma is for csv files as input
 for (my $i=0; $i < scalar @filenames; $i++) { # loop through the file names
 	open (INPUT, $filenames[$i]) or die "cannot open file $filenames[$i]\n";
 	while (my $line = <INPUT>) { #loop through each line of the file
-		my @data = split (",", $line);
+		my @data = split (" ", $line);
 		my $first_element = shift @data;
-
 		#decide if only one colum or all need to be stored
 		my $data2string; # holds the data to report
 		if ($column_number) {
@@ -58,7 +57,7 @@ for my $name (keys %reads) {
 	print "$name";
 	for (my $i=0; $i < scalar @filenames; $i++) {
 		if (exists $reads{$name}[$i]) {
-			print "$reads{$name}[$i]";
+			print "\t$reads{$name}[$i]";
 		}
 		else {
 			if ($zeros) {
