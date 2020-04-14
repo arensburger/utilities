@@ -64,13 +64,47 @@ while (my $line = <INPUT>) {
 		$transcriptlen{$id} = $b2 - $b1;
 		print OUTPUT $line;
 	}
-	if ($line =~ /\stRNA\s+(\d+)\s+(\d+).+ID=(\S+)/) {
+	elsif ($line =~ /\stRNA\s+(\d+)\s+(\d+).+ID=(\S+)/) {
                 my $b1 = $1;
                 my $b2 = $2;
                 my $id = $3;
                 $transcriptlen{$id} = $b2 - $b1;
                 print OUTPUT $line;
         }
+	elsif ($line =~ /\smRNA\s+(\d+)\s+(\d+).+ID=(\S+);/) {
+                my $b1 = $1;
+                my $b2 = $2;
+                my $id = $3;
+                $transcriptlen{$id} = $b2 - $b1;
+                print OUTPUT $line;
+        }
+	elsif ($line =~ /\sNCBI\s\S+\s+(\d+)\s+(\d+).+ID=(\S+)/) {
+                my $b1 = $1;
+                my $b2 = $2;
+                my $id = $3;
+                $transcriptlen{$id} = $b2 - $b1;
+                print OUTPUT $line;
+        }
+	elsif ($line =~ /\smRNA\s+(\d+)\s+(\d+).+ID=(\S+);/) {
+		my $b1 = $1;
+                my $b2 = $2;
+                my $id = $3;
+                $transcriptlen{$id} = $b2 - $b1;
+                print OUTPUT $line;
+        }
+	elsif ($line =~ /\sgene\s+(\d+)\s+(\d+).+ID=(\S+);/) {
+                my $b1 = $1;
+                my $b2 = $2;
+                my $id = $3;
+                $transcriptlen{$id} = $b2 - $b1;
+                print OUTPUT $line;
+        }
+	elsif ($line =~ /^\#/) {
+	}
+	else {
+		die "cannot read gff line\n$line";
+	}
+
 }
 close INPUT;
 close OUTPUT;
@@ -105,7 +139,7 @@ my $num_no_intersections = 0; #number of gff elements with no intersections
 open (INPUT, $intersect_file) or die "ERROR, could not open temporary file $intersect_file";
 while (my $line = <INPUT>) {
 #	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+transcript_id\s\"(\S+)\"/) {
-	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+ID=(\S+)/) { # update as necessary for gff file
+	if ($line =~ /^\S+\s\S+\s\S+\s(\S+)\s.+ID=(\S+);/) { # update as necessary for gff file
 		my $readname = $1;
 		my $transcript = $2;
 		$transcript_count{$transcript} += 1;
@@ -121,7 +155,7 @@ close INPUT;
 #add in data from gtf entries with no intersections
 open (INPUT, $no_intersect_file) or die "ERROR, could not open temporary file $no_intersect_file";
 while (my $line = <INPUT>) {
-        if ($line =~ /ID=(\S+)/) { # update as necessary for gff file
+        if ($line =~ /ID=(\S+);/) { # update as necessary for gff file
 		$transcript_count{$1} = 0;
 	}
         else {
