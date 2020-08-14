@@ -35,7 +35,6 @@ foreach my $scaffold (keys %genome) {
 				}
 		}
 	}
-	exit;
 }
 
 #load a genome into a hash
