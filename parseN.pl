@@ -10,10 +10,10 @@ GetOptions(
 );
 die ("usage: perl parseN.pl -in <REQUIRED: input file in fasta format> \n") unless ($file1);
 my %genome = genometohash($file1);
-my @p; #array that hold the position of N start and stops
-$p[0] = 0; #setting first position
 
 foreach my $scaffold (keys %genome) {
+	my @p; #array that hold the position of N start and stops
+	$p[0] = 0; #setting first position
 	while ($genome{$scaffold} =~ /([N]{30,})/g) { #identifies all the N positions
 		push @p,  @-[0]; # position of start of Ns
 		push @p, @+[0]; # position of end of Ns
