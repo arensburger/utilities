@@ -25,12 +25,10 @@ if [ -z $1 ]; then
 	echo "local copy is at $LLOC"
 	echo "remote copy is at $RLOC"
 	echo "usage: sh ug.sh <REQUIRED: action parameter choose one of the numbers below> <OPTIONAL: name sub directory to synchronize, default are files listed in $FILES"
-	echo "0: delete local directory and copy remote directories to local"
-	echo "1: same as 0, but dry run only"
-	echo "2: update remote copy with new versions of local files (no file deletion)"
-	echo "3: same as 2, but dry run only"
-	echo "4: update local copy with new versions of remote files (no file deletion)"
-	echo "5: same as 4, but dry run only"
+	echo "0: delete local directory and copy remote directories to local (1: for dry run)"
+	echo "2: update remote copy with new versions of local files (no file deletion) (3: for dry run)"
+	echo "4: update local copy with new versions of remote files (no file deletion) (5: for dry run)"
+	echo "6: update ,with deletion, local directory with remote copy (7: for dry run)"
 	exit 0
 elif [ $1 -eq 0 ]; then
 	rm -rf $LLOC/*
@@ -82,6 +80,23 @@ elif [ $1 -eq 5 ]; then
 		rsync -r -v -n --update --files-from=$FILES $RLOC/ $LLOC/
 		exit 0
 	fi
+elif [ $1 -eq 6 ]; then
+	if [ $2 ]; then # both options $1 and $2 have been selected
+		rsync -r -v --delete $RLOC/$2/ $LLOC/$2/
+		exit 0
+	else # only options $1 is selected
+		rsync -r -v --delete --files-from=$FILES $RLOC/ $LLOC/
+		exit 0
+	fi
+elif [ $1 -eq 7 ]; then
+	if [ $2 ]; then # both options $1 and $2 have been selected
+		rsync -r -v -n --delete $RLOC/$2/ $LLOC/$2/
+		exit 0
+	else # only options $1 is selected
+		rsync -r -v -n --delete --files-from=$FILES $RLOC/ $LLOC/
+		exit 0
+	fi
+
 else
 	echo "Error, command line parameter $1 is not valid"
 	exit 0
