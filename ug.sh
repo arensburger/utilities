@@ -26,7 +26,6 @@ if [ -z $1 ]; then
 	echo "remote copy is at $RLOC"
 	echo "usage: sh ug.sh <REQUIRED: action parameter choose one of the numbers below> <OPTIONAL: name sub directory to synchronize, default are files listed in $FILES"
 	echo "0: delete local directory and copy remote directories to local (1: for dry run)"
-	echo "2: update remote copy with new versions of local files (no file deletion) (3: for dry run)"
 	echo "4: update local copy with new versions of remote files (no file deletion) (5: for dry run)"
 	echo "6: update ,with deletion, local directory with remote copy (7: for dry run)"
 	exit 0
@@ -46,22 +45,6 @@ elif [ $1 -eq 1 ]; then
 		exit 0
 	else # only options $1 is selected
 		rsync -r -v -n --files-from=$FILES $RLOC/ $LLOC/
-		exit 0
-	fi
-elif [ $1 -eq 2 ]; then
-	if [ $2 ]; then # both options $1 and $2 have been selected
-		rsync -r -v --update $LLOC/$2/ $RLOC/$2/
-		exit 0
-	else # only options $1 is selected
-		rsync -r -v --update --files-from=$FILES $LLOC/ $RLOC/
-		exit 0
-	fi
-elif [ $1 -eq 3 ]; then
-	if [ $2 ]; then # both options $1 and $2 have been selected
-		rsync -r -v -n --update $LLOC/$2/ $RLOC/$2/
-		exit 0
-	else # only options $1 is selected
-		rsync -r -v -n --update --files-from=$FILES $LLOC/ $RLOC/
 		exit 0
 	fi
 elif [ $1 -eq 4 ]; then
