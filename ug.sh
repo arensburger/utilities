@@ -1,5 +1,5 @@
 #!/bin/bash
-# ug = update google
+# ug = update google -
 # Dec 2020 rysncs the local and remote copies of googe according to specified command line arguments
 
 # command line parameters
