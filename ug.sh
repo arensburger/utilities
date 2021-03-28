@@ -18,6 +18,6 @@ else
   REMOTEFOLDER="$REMOTEROOT$1/"
 fi
 
-#echo "local $LOCALFOLDER"
+#echo "local $LOCALFOLDER" 
 #echo "remote $REMOTEFOLDER"
 rsync -a --update --delete -v --exclude '.Trash/*' $LOCALFOLDER $REMOTEFOLDER
