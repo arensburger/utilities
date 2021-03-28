@@ -20,4 +20,4 @@ fi
 
 #echo "local $LOCALFOLDER"
 #echo "remote $REMOTEFOLDER"
-rsync -a --update --delete -v --exclude '.Trash/*' --exclude '.Trash-1000/*' $LOCALFOLDER $REMOTEFOLDER
+rsync -a --update --delete -v --exclude '.Trash/*' $LOCALFOLDER $REMOTEFOLDER
