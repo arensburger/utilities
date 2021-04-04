@@ -1,0 +1,27 @@
+#!/bin/bash
+# ug = update google -
+# ugl = update local folder with remote folder data
+
+LOCALROOT="/home/peter/local_GoogleDrive/" #root directory of local folder
+REMOTEROOT="/home/peter/GoogleDrive/" #root directory of GoogleDrive folder
+
+### Test if command line argument has been provided and set to and from folder
+### path accordingly
+if [ -z "$1" ]
+then
+  LOCALFOLDER=$LOCALROOT
+  REMOTEFOLDER=$REMOTEROOT
+else
+  LOCALFOLDER="$LOCALROOT$1/"
+  REMOTEFOLDER="$REMOTEROOT$1/"
+fi
+
+if [ "$1" == "-h" ] # looking for help
+then
+  echo "This script updates folder $LOCALROOT with the content of $REMOTEROOT with deletion"
+  echo "By default all the folders are updated, but a specific folder can be specied on the command line"
+  echo "The command that will executed by default is:"
+  echo "rsync -a --update --delete -v --exclude '.Trash/*' $REMOTEROOT $LOCALROOT"
+else
+  rsync -a --update --delete -v --exclude '.Trash/*' $REMOTEFOLDER $LOCALFOLDER
+fi
