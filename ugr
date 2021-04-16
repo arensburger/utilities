@@ -23,7 +23,7 @@ then
   echo "The command that will executed by default is:"
   echo "rsync -a --update --delete -v --exclude '.Trash/*' $LOCALROOT $REMOTEROOT"
 else
-  echo "Changing files ON GOOGLE DRIVE (5 second delay)
+  echo "Changing files ON GOOGLE DRIVE (5 second delay)"
   sleep 5
   rsync -a --update --delete -v --exclude '.Trash/*' $LOCALFOLDER $REMOTEFOLDER
 fi
