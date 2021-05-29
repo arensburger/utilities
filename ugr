@@ -12,8 +12,11 @@ then
   LOCALFOLDER=$LOCALROOT
   REMOTEFOLDER=$REMOTEROOT
 else
-  LOCALFOLDER="$LOCALROOT$1/"
-  REMOTEFOLDER="$REMOTEROOT$1/"
+  n1=$(echo "$1" | sed -r 's/\\//g') # replace all \ with nothing
+  n2=$(echo "$n1" | sed -r 's/\/home\/peter\/local_GoogleDrive\///g') # remove local folder if provided
+  n3=$(echo "$n2" | sed -r 's/\/$//g') #remove the last / if provided
+  LOCALFOLDER="$LOCALROOT$n3/"
+  REMOTEFOLDER="$REMOTEROOT$n3/"
 fi
 
 if [ "$1" == "-h" ] # looking for help
@@ -22,8 +25,10 @@ then
   echo "By default all the folders are updated, but a specific folder can be specied on the command line"
   echo "The command that will executed by default is:"
   echo "rsync -a --update --delete -v --exclude '.Trash/*' $LOCALROOT $REMOTEROOT"
+  echo "The root directory ($LOCALROOT) can be specified or not"
+  echo "Spaces in directory names are allowed by must be proceeded with a backslash (\) symbol"
 else
   echo "Changing files ON GOOGLE DRIVE (5 second delay)"
   sleep 5
-  rsync -a --update --delete -v --exclude '.Trash/*' $LOCALFOLDER $REMOTEFOLDER
+  rsync -a --update --delete -v --exclude '.Trash/*' "$LOCALFOLDER" "$REMOTEFOLDER"
 fi
