@@ -7,18 +7,6 @@ REMOTEROOT="/home/peter/GoogleDrive/" #root directory of GoogleDrive folder
 
 ### Test if command line argument has been provided and set to and from folder
 ### path accordingly
-if [ -z "$1" ]
-then
-  LOCALFOLDER=$LOCALROOT
-  REMOTEFOLDER=$REMOTEROOT
-else
-  n1=$(echo "$1" | sed -r 's/\\//g') # replace all \ with nothing
-  n2=$(echo "$n1" | sed -r 's/\/home\/peter\/local_GoogleDrive\///g') # remove local folder if provided
-  n3=$(echo "$n2" | sed -r 's/\/$//g') #remove the last / if provided
-  LOCALFOLDER="$LOCALROOT$n3/"
-  REMOTEFOLDER="$REMOTEROOT$n3/"
-fi
-
 if [ "$1" == "-h" ] # looking for help
 then
   echo "This script updates folder $LOCALROOT with the content of $REMOTEROOT with deletion"
@@ -27,8 +15,26 @@ then
   echo "rsync -a --update --delete -v --exclude '.Trash/*' "$REMOTEROOT" "$LOCALROOT""
   echo "The root directory ($LOCALROOT) can be specified or not"
   echo "Spaces in directory names are allowed by must be proceeded with a backslash (\) symbol"
+  exit 1
+elif [ -z "$1" ] # no directory has been spcified
+then
+  LOCALFOLDER=$LOCALROOT
+  REMOTEFOLDER=$REMOTEROOT
 else
-  echo "Updating LOCAL files (5 second delay)"
-  sleep 5
-  rsync -a --update --delete -v --exclude '.Trash/*' "$REMOTEFOLDER" "$LOCALFOLDER"
+  ld=$1 # local directory, need this because $1 cannot be edited
+  if [ $1 == "." ] # using local directory
+  then
+    ld=$(pwd)
+  fi
+  n1=$(echo "$ld" | sed -r 's/\\//g') # replace all \ with nothing
+  n2=$(echo "$n1" | sed -r 's/\/home\/peter\/local_GoogleDrive\///g') # remove local folder if provided
+  n3=$(echo "$n2" | sed -r 's/\/$//g') #remove the last / if provided
+  LOCALFOLDER="$LOCALROOT$n3/"
+  REMOTEFOLDER="$REMOTEROOT$n3/"
 fi
+
+### run the rsync command
+echo "Updating LOCAL files (5 second delay)"
+sleep 5
+rsync -a --update --delete -v --exclude '.Trash/*' "$REMOTEFOLDER" "$LOCALFOLDER"
+exit 1
