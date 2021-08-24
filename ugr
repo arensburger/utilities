@@ -17,9 +17,29 @@ then
   echo "Spaces in directory names are allowed by must be proceeded with a backslash (\) symbol"
   exit 1
 elif [ -z "$1" ] # no directory has been spcified
-then
+then # this means we will report all the files that have been modified and ask
+     # permission to upload them to Google
   LOCALFOLDER=$LOCALROOT
   REMOTEFOLDER=$REMOTEROOT
+  echo "Checking for files that are new or newer locally using rsync"
+  echo ""
+  idfiles=$(rsync --dry-run -a --update --delete -v --exclude=".*" $LOCALROOT $REMOTEROOT)
+  idfiles=$(echo "$idfiles" | grep -v \(DRY\ RUN\)) # cleaning up some unecessary lines
+  idfiles=$(echo "$idfiles" | grep -v ^sent) # cleaning up some unecessary lines
+  delfiles=$(echo "$idfiles" | grep deleting) # just the files to be deleted
+  addfiles=$(echo "$idfiles" | grep -v deleting) # just the file to be added
+  echo "$addfiles"
+  echo "$delfiles"
+  echo ""
+  echo -n "Should these change be made to $REMOTEROOT? (y/N) "
+  read upload
+  if [ "$upload" == "y" ] || [ "$upload" == "Y" ]
+  then
+    echo "ok, will upload"
+  else
+    echo "No changes made"
+    exit
+  fi
 else
   ld=$1 # local directory, need this because $1 cannot be edited
   if [ $1 == "." ] # using local directory
@@ -36,5 +56,5 @@ fi
 ### run the rsync command
 echo "Changing files ON GOOGLE DRIVE (5 second delay)"
 sleep 5
-rsync -a --update --delete -v --exclude '.Trash/*' "$LOCALFOLDER" "$REMOTEFOLDER"
+rsync -a --update --delete -v --exclude=".*" $LOCALROOT $REMOTEROOT
 exit 1
