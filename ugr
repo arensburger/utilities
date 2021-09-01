@@ -49,12 +49,17 @@ else
   n1=$(echo "$ld" | sed -r 's/\\//g') # replace all \ with nothing
   n2=$(echo "$n1" | sed -r 's/\/home\/peter\/local_GoogleDrive\///g') # remove local folder if provided
   n3=$(echo "$n2" | sed -r 's/\/$//g') #remove the last / if provided
+  #n4=$(echo "$n3" | sed -r 's/ /\\ /g') #replace empty spaces with \<space>
+  #n5=$(echo "$n4" | sed -r 's/\(/\\\(/g') #replace ( withe \)
+  #n6=$(echo "$n5" | sed -r 's/\)/\\\)/g') #replace ( withe \)
+
   LOCALFOLDER="$LOCALROOT$n3/"
   REMOTEFOLDER="$REMOTEROOT$n3/"
 fi
 
 ### run the rsync command
 echo "Changing files ON GOOGLE DRIVE (5 second delay)"
+#echo "rsync -a --protect-args --update --delete -v --exclude=\".*\" $LOCALFOLDER $REMOTEFOLDER"
 sleep 5
-rsync -a --update --delete -v --exclude=".*" $LOCALROOT $REMOTEROOT
+rsync -a --protect-args --update --delete -v --exclude=".*" "$LOCALFOLDER" "$REMOTEFOLDER"
 exit 1
