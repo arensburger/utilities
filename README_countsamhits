@@ -1,4 +1,4 @@
-August 2013
+zAugust 2013
 Modified the way the script counts paired and unpaired reads.  The most important modification is that unpaired reads are now recognized those that don't have a properly matching mate.  The effect of this change is that reads pairs that map to two different transcripts are not counted anymore.  This mostly affect the Nadia output (-p n), but it could also affect the Crystal output (-p c).  This still needs to be tested.
 
 August 2013
