@@ -1,10 +1,12 @@
 #! /usr/bin/perl
 # March 2021 takes a genome file in fasta format and returns a table of
 # how big each contig is
+# June 2022 added one more line at the end with the total size
 use strict;
 use Getopt::Long;
 
 my $genomefile; # genome fasta file
+my $totalsize; # total size of the genome
 
 ### set and test inputs
 GetOptions(
@@ -20,7 +22,11 @@ my %genome = genometohash($genomefile);
 foreach my $contig (keys %genome) {
 	my $size = length($genome{$contig});
 	print "$contig\t$size\n";
+	$totalsize += $size;
 }
+
+### print total size
+print "\nTotal genome size: $totalsize\n";
 
 #load a genome into a hash
 sub genometohash {
