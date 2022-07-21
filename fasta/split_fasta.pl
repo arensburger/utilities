@@ -28,10 +28,8 @@ my $segment_size = int($total_size/($number_of_segments-1));
 
 ### create segments
 ## create the first segment file name
-my @data = split /\./, $filename;
-my $dir = getcwd;
 my $i=1;
-my $segment_filename = $dir . "/" . $data[0] . "-s" . $i . ".fa";
+my $segment_filename = $dir . "/" . "segment" . "-s" . $i . ".fa";
 open (OUTPUT, ">$segment_filename") or die "cannot create file $segment_filename\n";
 my $current_size = 0; # current_size of the segment in bp
 foreach my $name (keys %genome) {
@@ -43,7 +41,7 @@ foreach my $name (keys %genome) {
 		close OUTPUT;
 		$current_size = 0;
 		$i++;
-		$segment_filename = $dir . "/" . $data[0] . "-s" . $i . ".fa";
+		$segment_filename = $dir . "/" . "segment" . "-s" . $i . ".fa";
 		open (OUTPUT, ">$segment_filename") or die "cannot create file $segment_filename\n";
 		print OUTPUT ">$name\n";
 		print OUTPUT "$genome{$name}\n";
