@@ -1,75 +1,3 @@
-#reverse complement
-sub rc {
-    my ($sequence) = @_;
-    $sequence = reverse $sequence;
-    $sequence =~ tr/ACGTRYMKSWacgtrymksw/TGCAYRKMWStgcayrkmws/;
-    return ($sequence);
-}
-
-#converts a fasta file to a phylip format, takes in a hash and returns a string
-sub ftophy {
-	my (%seq) = @_;
-	my $TITLELEN = 16; #number of characters in each title
-	my $return_string; #holds the returned string
-	
-	my $ntax = keys ( %seq ); #number of taxa
-	my @titles = keys %seq; #put all titles into an array so I can pick one and get the length of the element
-	my $nchar = length ($seq{$titles[1]});
-	
-	$return_string = " $ntax\t$nchar\n";
-	
-	foreach my $title (keys %seq) {
-		my $print_title = substr($title, 0, $TITLELEN);
-		$print_title =~ s/\.//g; #remove periods
-		#need to have same same spacing so calculating blanks
-		my $blanks; #holds the blank space
-		for(my $i=(length $print_title); $i<=$TITLELEN; $i++) {
-			$blanks .= " ";
-		}
-		$return_string .= "$print_title" . "$blanks" . "$seq{$title}\n";
-	}
-
-	return ($return_string);
-}
-
-#find the TIRs of a sequence
-sub findtirs {
-	my ($seq) = @_;
-
-	my $MISSMATCH = 2; #total allowable mismatches
-	my $endfound = 0; #boolean 0 until the end of the TIR is found
-	my $pos = 0; #current position in the sequence
-	my $lastgoodbase = 0; #position of the last match of bases
-	my $miss = 0; #number of non-matching sequences
-	while ($pos <= (0.5 * (length $seq)) && ($endfound == 0)) {
-	  my $leftbase = substr($seq, $pos, 1); #base on the left end
-	  my $rightbase = substr($seq, -$pos -1, 1);
-	  
-	  #update the current base
-	  if ($leftbase eq (rc $rightbase)) {
-	    $lastgoodbase = $pos;
-	  }
-	  else {
-	    $miss++;
-	  }
-
-	  #take stock if we need to stop
-	  if ($miss > $MISSMATCH) {
-	    $endfound = 1;
-	  }
-
-#	print "$leftbase, $rightbase, $miss, $lastgoodbase\n";
-	  $pos++;
-	}
-	my $tir1 = substr($seq, 0, $lastgoodbase + 1);
-	my $tir2 = substr($seq, -$lastgoodbase - 1, $lastgoodbase + 1);
-
-	my @tirs;
-	$tirs[0] = $tir1;
-	$tirs[1] = $tir2;
-	return(@tirs);
-}
-
 #load a genome into a hash
 sub genometohash {
 	use strict;
@@ -104,10 +32,116 @@ sub genometohash {
 			$line =~ s/\s//g;
 			$seq .= $line;
 		}
-	} 
+	}
 	$genome{$title} = $seq;
 
 	return (%genome);
+}
+
+#reverse complement
+sub rc {
+    my ($sequence) = @_;
+    $sequence = reverse $sequence;
+    $sequence =~ tr/ACGTRYMKSWacgtrymksw/TGCAYRKMWStgcayrkmws/;
+    return ($sequence);
+}
+
+#convert a libreoffice .ods file to a hash
+sub ods2hash {
+	my %csvdata; #line number as key and array with csv content as value
+
+	## get the base name of the input file
+	my $basename;
+	my @data = split /\./, $filename;
+	if (scalar @data > 2) {
+		die "Error: file name $filename cannot have two periods\n";
+	}
+	my $basename = $data[0];
+
+	## make .csv file in a temporary directory
+	my $tempdir = File::Temp->newdir;
+	`libreoffice --convert-to csv --outdir $tempdir $filename`;
+	my $csvfile = $basename . ".csv";
+
+	my $csv = Text::CSV->new({ sep_char => ',' });
+	open (INPUT, $csvfile) or die "cannot open file $csvfile\n";
+	my $i=0;
+	while (my $line = <INPUT>) {
+		if ($csv->parse($line)) {
+			my @fields = $csv->fields();
+			$csvdata{$i} = [ @fields ];
+			$i++;
+		}
+		else {
+			die "could not parse line\n$line";
+		}
+	}
+	close INPUT;
+	return(%csvdata)
+}
+
+#converts a fasta file to a phylip format, takes in a hash and returns a string
+sub ftophy {
+	my (%seq) = @_;
+	my $TITLELEN = 16; #number of characters in each title
+	my $return_string; #holds the returned string
+
+	my $ntax = keys ( %seq ); #number of taxa
+	my @titles = keys %seq; #put all titles into an array so I can pick one and get the length of the element
+	my $nchar = length ($seq{$titles[1]});
+
+	$return_string = " $ntax\t$nchar\n";
+
+	foreach my $title (keys %seq) {
+		my $print_title = substr($title, 0, $TITLELEN);
+		$print_title =~ s/\.//g; #remove periods
+		#need to have same same spacing so calculating blanks
+		my $blanks; #holds the blank space
+		for(my $i=(length $print_title); $i<=$TITLELEN; $i++) {
+			$blanks .= " ";
+		}
+		$return_string .= "$print_title" . "$blanks" . "$seq{$title}\n";
+	}
+
+	return ($return_string);
+}
+
+#find the TIRs of a sequence
+sub findtirs {
+	my ($seq) = @_;
+
+	my $MISSMATCH = 2; #total allowable mismatches
+	my $endfound = 0; #boolean 0 until the end of the TIR is found
+	my $pos = 0; #current position in the sequence
+	my $lastgoodbase = 0; #position of the last match of bases
+	my $miss = 0; #number of non-matching sequences
+	while ($pos <= (0.5 * (length $seq)) && ($endfound == 0)) {
+	  my $leftbase = substr($seq, $pos, 1); #base on the left end
+	  my $rightbase = substr($seq, -$pos -1, 1);
+
+	  #update the current base
+	  if ($leftbase eq (rc $rightbase)) {
+	    $lastgoodbase = $pos;
+	  }
+	  else {
+	    $miss++;
+	  }
+
+	  #take stock if we need to stop
+	  if ($miss > $MISSMATCH) {
+	    $endfound = 1;
+	  }
+
+#	print "$leftbase, $rightbase, $miss, $lastgoodbase\n";
+	  $pos++;
+	}
+	my $tir1 = substr($seq, 0, $lastgoodbase + 1);
+	my $tir2 = substr($seq, -$lastgoodbase - 1, $lastgoodbase + 1);
+
+	my @tirs;
+	$tirs[0] = $tir1;
+	$tirs[1] = $tir2;
+	return(@tirs);
 }
 
 #Collection of subs subroutines used for extracting hAT elements from the A. gambiea genome.
@@ -131,7 +165,7 @@ sub listfolder {
     closedir(FOLDER);
 #    shift(@files);
 #   shift(@files);
-	
+
 	my $i = 0;
 	my @new_files; #list of files without the "." and ".." files
 	foreach my $file (@files) {
@@ -140,7 +174,7 @@ sub listfolder {
 			$i++;
 		}
 	}
-	
+
    return (@new_files);
 }
 
@@ -166,7 +200,7 @@ sub load_fasta
 	$retval .= $_;
     }
     close FNA;
-    
+
     #remove blanks
     $retval =~ s/\s//g;
     return ($retval, $accession);
@@ -209,7 +243,7 @@ sub itrmatch_n
 
 	$str1 =~ tr/ACGTN/TGCAN/;
 	$str1 = reverse($str1);
-	for (my $i = 0; $i < 11; $i++) {	    
+	for (my $i = 0; $i < 11; $i++) {
 	    if (((substr($str1, $i, 1)) cmp (substr($str2, $i, 1))) != 0) {
 		if ($i == 0) {
 		    $firstbasemiss = 1;
@@ -232,14 +266,14 @@ sub seqmatch
 {
 	my ($str1, $str2, $miss_num) = @_;
 	my $missmatch = 0;
-	
+
 	#test lenght of matches
 	unless (length $str1 == length $str2) {
 		print "lengths of matching sequences $str1 and $str2 don't add up (this is in agutils.pm)\n";
 		exit;
 	}
 
-	for (my $i = 0; $i < length $str1; $i++) {	    
+	for (my $i = 0; $i < length $str1; $i++) {
 	    if (((substr($str1, $i, 1)) cmp (substr($str2, $i, 1))) != 0) {
 		$missmatch++;
 	    }
@@ -260,7 +294,7 @@ sub seqmatch2
 
 	my ($str1, $str2, $rc) = @_; #if rc is "1" means the input is rev-complemented
 	my $missmatch = 0;
-	
+
 	#test lenght of matches
 	unless (length $str1 == length $str2) {
 		print "lengths of matching sequences $str1 and $str2 don't add up (this is in agutils.pm)\n";
@@ -273,7 +307,7 @@ sub seqmatch2
     		$str2 =~ tr/ACGTacgt/TGCAtgca/;
 	}
 	#test the matches
-	for (my $i = 0; $i < length $str1; $i++) {	    
+	for (my $i = 0; $i < length $str1; $i++) {
 	    if (((substr($str1, $i, 1)) cmp (substr($str2, $i, 1))) != 0) {
 		$missmatch++;
 	    }
@@ -331,7 +365,7 @@ sub ext_genome {
 	my $substring; #the part we want to see
 	my $reverse_complement = 0; #boolean, wether to rc or not
 	my $obj = $inx->fetch($seqname);
-	
+
 	#testing for rc if true flag it and reverse the coodinates
 	if ($c1 > $c2) {
 		$reverse_complement = 1;
@@ -339,8 +373,8 @@ sub ext_genome {
 		$c1 = $c2;
 		$c2 = $tempc1;
 	}
-	
-	
+
+
 	#test for rc
 	if ($reverse_complement == 1) {
 		if (($c1 == "") && ($c2 == "")){ #if no boundaries are given
@@ -359,7 +393,7 @@ sub ext_genome {
 			$substring = substr($obj->seq, $c1 - 1, ($c2-$c1+1));
 		}
 	}
-	
+
 	my $title_name = ">" . $seqname . "_" . $c1 . "_" . $c2;
 
 	return ($title_name, $substring);
@@ -369,7 +403,7 @@ sub ext_genome {
 # Feb 08.  Takes a nucleotide sequence and a protein sequence as input and outputs the mRNA sequence
 
 sub mRNA {
-	use strict; 
+	use strict;
 	use Bio::SeqIO;
 	use Bio::PrimarySeq;
 
@@ -378,7 +412,7 @@ sub mRNA {
 	if ($protein =~ /\*$/) {
 		$protein = substr ($protein, 0, -1);
 	}
-	
+
 	#determine if the nucleotide sequence ends with a stop codon, if it does add it to end of the output
 	my $last_codon = substr($seq, (length $seq) - 3, 3);
 	unless ($last_codon =~ /TAA|TAG|TGA/i) {
@@ -386,8 +420,8 @@ sub mRNA {
 	}
 
 
-	my $MATCHLEN = 4; #number of aa searched to find a match on the new strand	
-		
+	my $MATCHLEN = 4; #number of aa searched to find a match on the new strand
+
 	#create a new sequence object and translate it into all three frames
 	my $seq_object  = new Bio::PrimarySeq( -seq => $seq,
 						-display_id => 'example1');
@@ -395,8 +429,8 @@ sub mRNA {
 	my $t2 = $seq_object->translate(-frame => 1)->seq();
 	my $t3 = $seq_object->translate(-frame => 2)->seq();
 	my $tlen = (length $t3) - 1; #length of the translated frames used to stop later
-	
-	
+
+
 	my $match_seq = substr($protein, 0, $MATCHLEN); #sequence on proteinused to find the new strand
 	my $match_len = 0; #length of the current match on the protein and translated strands
 	my $start_pos = 0; #position where translation starts on translated strands
@@ -407,46 +441,46 @@ sub mRNA {
 	my $position = 0; #current position on the protein
 	my $start_position = 0; #starting position on protein for current exon
 	my $position_transl = 0; #current position on the translated sequences
-	
+
 	my @aaexon; #array that holds the exon sequences as amino acids
 	my @nucexon; #array that holds the exon sequences as nucleotides
 	my @nucintron; #array that holds the intron sequences
-	
+
 	#examine the translated sequences and generate a table of info about where the breaks are in @tcode
 	while ($position < length($protein)) {
 		($frame, $start_pos) = find_frame ($match_seq, $position_transl, $t1, $t2, $t3); #find the frame and where on the frame it starts
-	
+
 		if ($frame == 0) { #if can't find the next math this is aborts the program
 			print "error, could not find a match to protein sequence $match_seq, after position $position_transl in the translated DNA sequences\n";
 			return (0);
 #			exit;
 		}
-	
+
 		$match_len = match_length(substr($protein, $position, (length $protein) - $position), substr(frame_seq($frame, $t1, $t2, $t3), $start_pos, ((length $t1) - $start_pos))); #find the length of the match on the current frame
-		
+
 		#update the counters
 		$end_pos = $start_pos + $match_len - 1;
 		$position += $match_len - 1;
-		$position_transl = $end_pos ; 
-	
+		$position_transl = $end_pos ;
+
 		#update current exon sequence
 		push (@aaexon, substr ($protein, $start_position, $position - $start_position));
 		$start_position = $position;
-	
+
 		#record the information
 		push @tcode, [$frame, $start_pos, $end_pos];
 	#print "$frame, $start_pos, $end_pos, $match_len, $tlen, $position\n";
-	
+
 		#determine the next aa sequence to search
 		$match_seq = substr ($protein, $position, $MATCHLEN);
 	#print "$match_seq\n";
 	}
-	
+
 	#transalte the information in @tcode into mRNA
 	my $n1 = $seq_object->seq(); #nucleotide sequence starting with first bp of first frame;
 	my $n2 = substr($n1, 1, (length $n1) - 1); #nucleotide sequence starting with first bp of second frame;
 	my $n3 = substr($n1, 2, (length $n1) - 2); #nucleotide sequence starting with first bp of third frame;
-	
+
 	#print the mRNA sequence
 	my $mRNA; #string with mRNA sequence
 	for my $info (@tcode) {
@@ -467,7 +501,7 @@ sub mRNA {
 	}
 	return $mRNA . $last_codon;
 	exit;
-	
+
 	#returns the string depending on the number, real simple
 	sub frame_seq {
 		(my $frame, my $s1, my $s2, my $s3) = @_;
@@ -482,20 +516,20 @@ sub mRNA {
 		}
 		else {
 			return (0);
-#			print "error no such frame as $frame\n"; 
+#			print "error no such frame as $frame\n";
 #			exit;
 		}
 	}
-	
+
 	#given a short sequence, minimal position, and three sequences find where the sequence matches in the three and the position
 	sub find_frame {
 		(my $seq, my $minimum, my $s1, my $s2, my $s3) = @_;
-		
+
 		#shorten the search to just those AA left to explore
 		my $s1_short = substr ($s1, $minimum, (length ($s1) - $minimum));
 		my $s2_short = substr ($s2, $minimum, (length ($s2) - $minimum));
 		my $s3_short = substr ($s3, $minimum, (length ($s3) - $minimum));
-		
+
 		#find matches
 		my $frame = 0;
 		my $position = length $s1_short; #setting the position very high so the minimal match will be found
@@ -517,17 +551,17 @@ sub mRNA {
 				$position = pos($s3_short);
 			}
 		}
-	
+
 		$position += $minimum - length ($seq); #adjust the position
 		return ($frame, $position);
 	}
-	
+
 	#given two strings determines how long the two strings match
 	sub match_length {
 		(my $s1, my $s2) = @_;
 		my $index = 0;
 		my $match = 0; #boolean 0 when sequences match, 1 when sequences stop matching
-	
+
 		while ($match == 0) {
 			if (substr($s1, $index, 1) eq substr($s2, $index, 1)) {
 				$index++;
@@ -540,7 +574,7 @@ sub mRNA {
 			}
 		}
 		return ($index + 1);
-		
+
 	}
 }
 
@@ -552,13 +586,13 @@ sub addzeros {
 	#break number into interger and decimal parts
 	my $integer = int($num);
 	my $decimal = $num - $integer;
-	
+
 	my $zerostoadd = $digits - (length $integer);
 	if ($zerostoadd < 0) {
 		return "error, too few digits ($digits) to convert $num\n";
 	}
 	else {
-		my $addigits; 
+		my $addigits;
 		for (my $i=1; $i <= $zerostoadd; $i++) {
 			$addigits .= "0";
 		}
@@ -581,26 +615,26 @@ sub blastGFFConverter {
 	use Getopt::Long;
 	use Term::ANSIColor;
 	use Data::Dumper;
-	
+
 	(my $blastfile) = @_;
-	
+
 	##> Define options
 	my %config;
-	
+
 	##> Setting Global Variables
 	$| = 1;
 	my $currentSubjectSeq = "";
 
 	open(BLAST, "<$blastfile") or die printError("Unable to open $blastfile\n", 1);
-	my $gff_output = File::Temp->new( UNLINK => 1, SUFFIX => '.gff' ); # temporary file with results blast 
+	my $gff_output = File::Temp->new( UNLINK => 1, SUFFIX => '.gff' ); # temporary file with results blast
 
 	while (1) {
 	    my @line = split(/\t/, <BLAST>);
 	    $line[12] =~ s/plus/\+/g;
 	    $line[12] =~ s/minus/\-/g;
-    
+
 	    if ($#line == 14) {
-	       # open(GFF, ">$config{out_gff_basename}.gff") or die printError("Unable to open $config{out_gff_basename}.gff\n", 1);   
+	       # open(GFF, ">$config{out_gff_basename}.gff") or die printError("Unable to open $config{out_gff_basename}.gff\n", 1);
 		open (GFF, ">$gff_output") or die "cannot open file $gff_output for gff file\n";
 	        $currentSubjectSeq = $line[1];
 	        ($line[8], $line[9]) = ($line[9], $line[8]) if ($line[8] > $line[9]);
@@ -608,30 +642,30 @@ sub blastGFFConverter {
 	        last;
 	    }
 	}
-	
+
 	while (<BLAST>) {
-	    
+
 	    chomp;
 	    s/plus/\+/g;
 	    s/minus/\-/g;
-	    
+
 	    (my $qSeqId,    my $sSeqId,     my $pIdent,     my $alLength,   my $mismatch,
 	     my $gapOpen,   my $qStart,     my $qEnd,       my $sStart,     my $sEnd,
 	     my $eValue,    my $bitScore,   my $sStrand,    my $qLen,       my $sLen)
 	    = split(/\t/);
-    
+
 	    if ($currentSubjectSeq ne $sSeqId) {
 	        $currentSubjectSeq = $sSeqId;
 	    }
-	    
+
 	    ($sStart, $sEnd) = ($sEnd, $sStart) if ($sStart > $sEnd);
-	    
+
 	    print GFF "$sSeqId\tBLAST\tmatch\t$sStart\t$sEnd\t0.0\t$sStrand\t.\tTarget=$qSeqId $qStart $qEnd +;Ident=$pIdent;AlLength=$alLength;Mismatch=$mismatch;Gapopen=$gapOpen;Evalue=$eValue;Bitscore=$bitScore;Qlen=$qLen;Slen=$sLen\n";
 	}
 
 	close GFF;
 	close BLAST;
-	
+
 	return($gff_output);
 }
 
