@@ -48,6 +48,9 @@ sub rc {
 
 #convert a libreoffice .ods file to a hash
 sub ods2hash {
+	use Text::CSV;
+	use File::Temp ();
+
 	my %csvdata; #line number as key and array with csv content as value
 
 	## get the base name of the input file
