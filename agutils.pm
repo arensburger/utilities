@@ -51,6 +51,8 @@ sub ods2hash {
 	use Text::CSV;
 	use File::Temp ();
 
+	my ($filename) = @_;
+
 	my %csvdata; #line number as key and array with csv content as value
 
 	## get the base name of the input file
@@ -64,7 +66,7 @@ sub ods2hash {
 	## make .csv file in a temporary directory
 	my $tempdir = File::Temp->newdir;
 	`libreoffice --convert-to csv --outdir $tempdir $filename`;
-	my $csvfile = $basename . ".csv";
+	my $csvfile = $tempdir . "/" . $basename . ".csv";
 
 	my $csv = Text::CSV->new({ sep_char => ',' });
 	open (INPUT, $csvfile) or die "cannot open file $csvfile\n";
