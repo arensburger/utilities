@@ -46,7 +46,6 @@ sub rc {
     return ($sequence);
 }
 
-#convert a libreoffice .ods file to a hash
 sub ods2hash {
 	use Text::CSV;
 	use File::Temp ();
@@ -70,7 +69,8 @@ sub ods2hash {
 
 	my $csv = Text::CSV->new({ sep_char => ',' });
 	open (INPUT, $csvfile) or die "cannot open file $csvfile\n";
-	my $i=0;
+	my $i=2; # start at 2 to account for header
+	<INPUT>; #skip the first line
 	while (my $line = <INPUT>) {
 		if ($csv->parse($line)) {
 			my @fields = $csv->fields();
