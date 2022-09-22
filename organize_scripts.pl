@@ -14,9 +14,9 @@ my $path = "/home/peter/utilities";
 GetOptions(
 	'p:s'     => \$path,
  );
-#unless (defined $path) {
-#		die "usage: perl organize_scripts.pl -p <file path REQUIRED>\n";
-#}
+# unless (defined $path) {
+# 		die "usage: perl organize_scripts.pl -p <file path REQUIRED>\n";
+# }
 
 # read the directory and get all the files
 find(\&find_scripts, $path); # puts all the names into the @scriptnames array
