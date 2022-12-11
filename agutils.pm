@@ -13,7 +13,6 @@ sub genometohash {
 	if ($line =~ />(\S+)/) {
 		$title = $1;
 		$seq = "";
-		$genome{$title}[3] = fullornot($title);
 	}
 	else {
 		die "Error: file $filename does not start with > line\n";
@@ -25,19 +24,14 @@ sub genometohash {
 			if (exists $genome{$title}[0]) {
 				print STDERR "error in sub genometohash, two contigs have the name $title, ignoring one copy\n";
 			}
-			else {
-				$genome{$title}[0] = $seq;
-			}
 			$title = $1;
 			$seq = "";
-			$genome{$title}[3] = fullornot($title); # record if the ORF has start and end
 		}
 		else {
 			$line =~ s/\s//g;
 			$seq .= $line;
 		}
 	}
-	$genome{$title}[0] = $seq;
 	return (%genome);
 }
 
