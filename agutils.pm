@@ -1,35 +1,43 @@
-#load a genome into a hash
+# put fasta file into hash
 sub genometohash {
 	use strict;
 	(my $filename) = @_;
 	my %genome; #hash with the genome
 	my $seq="";
 	my $title;
+
 	open (INPUT, $filename) or die "cannot open input file $filename in sub genometohash\n";
+
+	## process the first title line
+	my $line = <INPUT>;
+	if ($line =~ />(\S+)/) {
+		$title = $1;
+		$seq = "";
+		$genome{$title}[3] = fullornot($title);
+	}
+	else {
+		die "Error: file $filename does not start with > line\n";
+	}
+
+	## process the remaining lines
 	while (my $line = <INPUT>) {
-		if ($line =~ />(.+)/)  {
-			chomp $1;
-			$title = $1;
-			if (exists $genome{$title}) {
+		if (($line =~ />(\S+)/) && (length $seq > 1)) {
+			if (exists $genome{$title}[0]) {
 				print STDERR "error in sub genometohash, two contigs have the name $title, ignoring one copy\n";
 			}
 			else {
-				$genome{$title} = $seq;
+				$genome{$title}[0] = $seq;
 			}
-			$seq = "";
-		}
-		elsif ($line =~ />(.+)/) { #will only be true for the first line
-			chomp $1;
 			$title = $1;
-      $seq = "";
+			$seq = "";
+			$genome{$title}[3] = fullornot($title); # record if the ORF has start and end
 		}
 		else {
 			$line =~ s/\s//g;
 			$seq .= $line;
 		}
 	}
-	$genome{$title} = $seq;
-
+	$genome{$title}[0] = $seq;
 	return (%genome);
 }
 
