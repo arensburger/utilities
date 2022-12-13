@@ -1,30 +1,35 @@
 # put fasta file into hash
-sub genometohash {
+sub genometohash_mod {
 	use strict;
 	(my $filename) = @_;
 	my %genome; #hash with the genome
 	my $seq="";
 	my $title;
+	open (INPUT100, $filename) or die "cannot open input file $filename in sub genometohash\n";
+	my $line = <INPUT100>;
+	my $title;
+	my $seq = "";
 
-	open (INPUT, $filename) or die "cannot open input file $filename in sub genometohash\n";
-
-	## process the first title line
-	my $line = <INPUT>;
-	if ($line =~ />(\S+)/) {
+	# dealing with the first line
+	if ($line =~ />(.+)/) {
+		chomp $1;
 		$title = $1;
-		$seq = "";
 	}
 	else {
-		die "Error: file $filename does not start with > line\n";
+		die "ERROR, fasta file $filename does not start with a title line\n";
 	}
 
-	## process the remaining lines
-	while (my $line = <INPUT>) {
-		if (($line =~ />(\S+)/) && (length $seq > 1)) {
-			if (exists $genome{$title}[0]) {
+	# dealing with the remaining lines
+	while (my $line = <INPUT100>) {
+		if ($line =~ />(.+)/)  {
+			chomp $1;
+			$title = $1;
+			if (exists $genome{$title}) {
 				print STDERR "error in sub genometohash, two contigs have the name $title, ignoring one copy\n";
 			}
-			$title = $1;
+			else {
+				$genome{$title} = $seq;
+			}
 			$seq = "";
 		}
 		else {
@@ -32,6 +37,8 @@ sub genometohash {
 			$seq .= $line;
 		}
 	}
+	$genome{$title} = $seq;
+	close INPUT100;
 	return (%genome);
 }
 
