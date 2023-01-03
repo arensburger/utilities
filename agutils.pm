@@ -1,4 +1,4 @@
-# put fasta file into hash
+#load a genome into a hash
 sub genometohash_mod {
 	use strict;
 	(my $filename) = @_;
@@ -23,12 +23,13 @@ sub genometohash_mod {
 	while (my $line = <INPUT100>) {
 		if ($line =~ />(.+)/)  {
 			chomp $1;
-			$title = $1;
-			if (exists $genome{$title}) {
-				print STDERR "error in sub genometohash, two contigs have the name $title, ignoring one copy\n";
+			my $new_title = $1;
+			if (exists $genome{$new_title}) {
+				print STDERR "error in sub genometohash, two contigs have the name $new_title, ignoring one copy\n";
 			}
 			else {
 				$genome{$title} = $seq;
+				$title = $new_title;
 			}
 			$seq = "";
 		}
