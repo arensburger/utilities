@@ -1,3 +1,5 @@
+package agutils;
+
 #load a genome into a hash
 sub genometohash_mod {
 	use strict;
