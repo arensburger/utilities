@@ -61,7 +61,7 @@ sub fasta_first_seq {
 		$title = $1;
 	}
 	else {
-		die "ERROR, fasta file $filename does not start with a title line\n";
+		return (-1, "");
 	}
 
 	# read the file through the first sequence
