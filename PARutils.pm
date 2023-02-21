@@ -21,7 +21,7 @@ sub genometohash {
 		die "ERROR, fasta file $filename does not start with a title line\n";
 	}
 
-	# dealing with the remaining lines
+	## dealing with the remaining lines 
 	while (my $line = <INPUT100>) {
 		if ($line =~ />(.+)/)  {
 			chomp $1;
