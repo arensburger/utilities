@@ -69,6 +69,9 @@ sub fixdirname {
 	$string =~ s/\\ /backslachandspace/g; # replace all existing backslash and spaces with long, unique, word
 	$string =~ s/ /\\ /g; #replace all remaing spaces with backslash and space symbols
 	$string =~ s/backslachandspace/\\ /g; #put the backslash and space symbols back
+	$string =~ s/\(/\\\(/g; #change the parentheses
+	$string =~ s/\)/\\\)/g; #change the parentheses
+
 
 	#make sure the name does not end with a /
 	if ((substr $string, -1) eq "/") {
